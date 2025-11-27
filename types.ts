@@ -40,8 +40,15 @@ export enum UserStatus {
 
 
 
+export enum VehicleType {
+    CAR = 'CAR',
+    VAN = 'VAN',
+    TRUCK = 'TRUCK',
+    MOTORCYCLE = 'MOTORCYCLE',
+}
+
 export interface DriverProfile {
-    vehicleType: '5_SEATER' | '7_SEATER' | 'VAN';
+    vehicleType: VehicleType;
     licensePlate: string;
     region: 'HK' | 'KLN' | 'NT';
     isOnline: boolean;
@@ -60,9 +67,6 @@ export interface UserProfile {
     lastLogin: number; // Timestamp
 
     driverProfile?: DriverProfile;
-
-    // Role-specific properties
-    vehicleType?: 'CAR' | 'VAN' | 'TRUCK'; // For DRIVER
 
     // For STATION_MANAGER
     managedStationIds?: string[];

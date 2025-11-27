@@ -168,10 +168,20 @@ const Layout = ({ children }: { children?: React.ReactNode }) => {
     );
 };
 
+import { PreLoginOnboarding } from './components/PreLoginOnboarding';
+
+import DriverRequests from './pages/Admin/DriverRequests';
+
 const AppContent = () => {
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
+  const [showPreLoginOnboarding, setShowPreLoginOnboarding] = useState(false);
 
   useEffect(() => {
+    const hasCompletedPreLoginOnboarding = localStorage.getItem('preLoginOnboardingCompleted_v1');
+    if (!hasCompletedPreLoginOnboarding) {
+      setShowPreLoginOnboarding(true);
+    }
+
     if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
             (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
@@ -179,6 +189,15 @@ const AppContent = () => {
         );
     }
   }, []);
+
+  const handleRoleSelected = (role: UserRole) => {
+    localStorage.setItem('preLoginRoleSelection_v1', role);
+  };
+
+  const handleOnboardingComplete = () => {
+    localStorage.setItem('preLoginOnboardingCompleted_v1', 'true');
+    setShowPreLoginOnboarding(false);
+  };
 
   const { user } = useAuth();
 
@@ -198,6 +217,10 @@ const AppContent = () => {
     }
   }
 
+  if (showPreLoginOnboarding) {
+    return <PreLoginOnboarding onRoleSelected={handleRoleSelected} onComplete={handleOnboardingComplete} />;
+  }
+
   return (
     <HashRouter>
       <Layout>
@@ -212,6 +235,7 @@ const AppContent = () => {
             <Route path="/me" element={<MeView userLocation={location} />} />
             <Route path="/my-stations" element={<MyStationsView userLocation={location} />} />
             <Route path="/station/:id" element={<StationDetailView userLocation={location} />} />
+            <Route path="/admin/driver-requests" element={<DriverRequests />} />
           </Routes>
         </div>
       </Layout>

@@ -365,36 +365,68 @@ router.post('/:id/users', authMiddleware, roleMiddleware([UserRole.ADMIN, UserRo
       return res.status(400).json({ error: 'Valid email and role are required' });
     }
 
+    // Find the user by email to get their UID
+    const userRecord = await admin.auth().getUserByEmail(email).catch(() => null);
+    if (!userRecord) {
+      return res.status(404).json({ error: `User with email ${email} not found.` });
+    }
+    const userId = userRecord.uid;
+
     const stationRef = db.collection('stations').doc(stationId);
-    const stationDoc = await stationRef.get();
+    const userRoleRef = db.collection('roles').doc(userId);
 
-    if (!stationDoc.exists) {
-      return res.status(404).json({ error: 'Station not found' });
-    }
+    await db.runTransaction(async (transaction) => {
+      const stationDoc = await transaction.get(stationRef);
+      if (!stationDoc.exists) {
+        throw new Error('Station not found');
+      }
 
-    const station = stationDoc.data() as Station;
-    const isManager = station.managers && station.managers.includes(currentUser.email);
-    const isAdmin = currentUser.role === 'ADMIN';
+      const station = stationDoc.data() as Station;
+      const isManager = station.managers && station.managers.includes(currentUser.email);
+      const isAdmin = currentUser.role === 'ADMIN';
 
-    if (!isAdmin && !isManager) {
-      return res.status(403).json({ error: 'Forbidden: Only admins or station managers can add users.' });
-    }
+      if (!isAdmin && !isManager) {
+        throw new Error('Forbidden: Only admins or station managers can add users.');
+      }
+      if (role === 'owner' && isManager && !isAdmin) {
+        throw new Error('Forbidden: Station managers cannot add other managers.');
+      }
 
-    // Station owners can't add other owners
-    if (role === 'owner' && isManager && !isAdmin) {
-      return res.status(403).json({ error: 'Forbidden: Station managers cannot add other managers.' });
-    }
+      // Update station document
+      const fieldToUpdate = role === 'owner' ? 'managers' : 'volunteers';
+      transaction.update(stationRef, {
+        [fieldToUpdate]: admin.firestore.FieldValue.arrayUnion(email),
+      });
 
-    const fieldToUpdate = role === 'owner' ? 'managers' : 'volunteers';
+      // Update user's global role only if they are being added as an owner
+      if (role === 'owner') {
+        const newRole = UserRole.STATION_MANAGER;
+        const userRoleDoc = await transaction.get(userRoleRef);
 
-    await stationRef.update({
-      [fieldToUpdate]: admin.firestore.FieldValue.arrayUnion(email),
+        if (!userRoleDoc.exists) {
+          // If the user has no role, set it.
+          transaction.set(userRoleRef, { role: newRole });
+        } else {
+          // If the user has a role, only upgrade it. Never downgrade.
+          const currentRole = userRoleDoc.data()?.role as UserRole;
+          const roleHierarchy = [UserRole.RESIDENT, UserRole.VOLUNTEER, UserRole.STATION_MANAGER, UserRole.ADMIN];
+          if (roleHierarchy.indexOf(newRole) > roleHierarchy.indexOf(currentRole)) {
+            transaction.update(userRoleRef, { role: newRole });
+          }
+        }
+      }
     });
 
-    return res.json({ success: true, message: `User ${email} added as ${role} to station ${stationId}` });
+    return res.json({ success: true, message: `User ${email} added as ${role} to station ${stationId} and role updated.` });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error adding user to station:', error);
+    if (error.message.includes('Forbidden')) {
+      return res.status(403).json({ error: error.message });
+    }
+    if (error.message.includes('not found')) {
+      return res.status(404).json({ error: error.message });
+    }
     return res.status(500).json({ error: 'Failed to add user to station' });
   }
 });
@@ -410,46 +442,74 @@ router.delete('/:id/users', authMiddleware, roleMiddleware([UserRole.ADMIN, User
     if (!currentUser) {
       return res.status(401).json({ error: 'Unauthorized' });
     }
-
     if (!email || !role || !['owner', 'volunteer'].includes(role)) {
       return res.status(400).json({ error: 'Valid email and role are required' });
     }
 
+    const userRecord = await admin.auth().getUserByEmail(email).catch(() => null);
+    if (!userRecord) {
+      return res.status(404).json({ error: `User with email ${email} not found.` });
+    }
+    const userId = userRecord.uid;
+
     const stationRef = db.collection('stations').doc(stationId);
-    const stationDoc = await stationRef.get();
+    const userRoleRef = db.collection('roles').doc(userId);
+    const stationsCollection = db.collection('stations');
 
-    if (!stationDoc.exists) {
-      return res.status(404).json({ error: 'Station not found' });
-    }
+    await db.runTransaction(async (transaction) => {
+      const stationDoc = await transaction.get(stationRef);
+      if (!stationDoc.exists) {
+        throw new Error('Station not found');
+      }
 
-    const station = stationDoc.data() as Station;
-    const isManager = station.managers && station.managers.includes(currentUser.email);
-    const isAdmin = currentUser.role === 'ADMIN';
+      const station = stationDoc.data() as Station;
+      const isManagerOnThisStation = station.managers && station.managers.includes(currentUser.email);
+      const isAdmin = currentUser.role === 'ADMIN';
 
-    if (!isAdmin && !isManager) {
-      return res.status(403).json({ error: 'Forbidden: Only admins or station managers can perform this action.' });
-    }
+      if (!isAdmin && !isManagerOnThisStation) {
+        throw new Error('Forbidden: Only admins or station managers can perform this action.');
+      }
+      if (role === 'owner' && isManagerOnThisStation && !isAdmin) {
+        throw new Error('Forbidden: Station managers cannot remove other managers.');
+      }
+      if (role === 'owner' && email === currentUser.email && station.managers && station.managers.length === 1 && !isAdmin) {
+        throw new Error('Forbidden: You cannot remove yourself as the last manager.');
+      }
 
-    // Station owners can't remove other owners
-    if (role === 'manager' && isManager && !isAdmin) {
-      return res.status(403).json({ error: 'Forbidden: Station managers cannot remove other managers.' });
-    }
+      // Update station: remove user
+      const fieldToUpdate = role === 'owner' ? 'managers' : 'volunteers';
+      transaction.update(stationRef, {
+        [fieldToUpdate]: admin.firestore.FieldValue.arrayRemove(email),
+      });
 
-    // Owners can't remove themselves
-    if (role === 'manager' && isManager && email === currentUser.email) {
-      return res.status(403).json({ error: 'Forbidden: Station managers cannot remove themselves.' });
-    }
+      // Role demotion logic
+      const userRoleDoc = await transaction.get(userRoleRef);
+      const currentRole = userRoleDoc.exists ? userRoleDoc.data()?.role as UserRole : UserRole.RESIDENT;
 
-    const fieldToUpdate = role === 'manager' ? 'managers' : 'volunteers';
+      if (currentRole === UserRole.ADMIN) { // Admins are not demoted
+        return;
+      }
 
-    await stationRef.update({
-      [fieldToUpdate]: admin.firestore.FieldValue.arrayRemove(email),
+      // Check if user is manager or volunteer in OTHER stations
+      const otherStationsQuery = await stationsCollection.where(fieldToUpdate, 'array-contains', email).get();
+      const isMemberElsewhere = otherStationsQuery.docs.some(doc => doc.id !== stationId);
+
+      // Only perform role demotion for owner/manager
+      if (role === 'owner' && !isMemberElsewhere && currentRole === UserRole.STATION_MANAGER) {
+        transaction.update(userRoleRef, { role: UserRole.VOLUNTEER });
+      }
     });
 
-    return res.json({ success: true, message: `User ${email} removed from ${role}s of station ${stationId}` });
+    return res.json({ success: true, message: `User ${email} removed from ${role}s of station ${stationId} and roles updated if necessary.` });
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error removing user from station:', error);
+    if (error.message.includes('Forbidden')) {
+      return res.status(403).json({ error: error.message });
+    }
+    if (error.message.includes('not found')) {
+      return res.status(404).json({ error: error.message });
+    }
     return res.status(500).json({ error: 'Failed to remove user from station' });
   }
 });

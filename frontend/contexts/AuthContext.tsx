@@ -41,6 +41,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setFirebaseUser(user);
       if (user) {
         await fetchUserProfile(user);
+        const preLoginRole = localStorage.getItem('preLoginRoleSelection_v1');
+        if (preLoginRole === UserRole.VOLUNTEER) {
+          try {
+            await apiClient.post('/roles/self-claim-volunteer');
+            await refreshUser();
+            localStorage.removeItem('preLoginRoleSelection_v1');
+          } catch (error) {
+            console.error("Failed to self-claim volunteer role", error);
+          }
+        }
       } else {
         setUser(null);
         localStorage.removeItem('resq_user_session_v2');

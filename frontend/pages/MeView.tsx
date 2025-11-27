@@ -10,18 +10,21 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { User, LogOut, ShieldCheck, Truck, Users, UserCircle, Bell, Save, Home, ChevronRight } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 
+import { DriverRequestModal } from '../components/DriverRequestModal';
+
 interface Props {
   userLocation: { lat: number; lng: number } | null;
 }
 
 export const MeView: React.FC<Props> = ({ userLocation }) => {
   const navigate = useNavigate();
-  const { user, logout, login } = useAuth();
+  const { user, logout, login, refreshUser } = useAuth();
   const { t } = useLanguage();
   const { showToast } = useToast();
   const [savedStations, setSavedStations] = useState<Station[]>([]);
   const [ownedStationsCount, setOwnedStationsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDriverRequestModalOpen, setIsDriverRequestModalOpen] = useState(false);
   
   // Admin Global Alert State
   const [alertText, setAlertText] = useState('');
@@ -84,6 +87,16 @@ export const MeView: React.FC<Props> = ({ userLocation }) => {
 
   return (
     <div className="pb-24">
+      {isDriverRequestModalOpen && user && (
+        <DriverRequestModal
+          user={user}
+          onClose={() => setIsDriverRequestModalOpen(false)}
+          onComplete={() => {
+            // You might want to refresh user data here to show "pending" status
+            refreshUser();
+          }}
+        />
+      )}
       {/* Profile Section */}
       <div className="bg-white p-6 mb-2 border-b">
         <h2 className="text-2xl font-bold mb-4">{t('me.title')}</h2>
@@ -100,10 +113,18 @@ export const MeView: React.FC<Props> = ({ userLocation }) => {
                     {getRoleBadge(user.role)}
                 </div>
                 <p className="text-gray-500 text-sm mb-2">{user.email}</p>
+                {user.role !== UserRole.DRIVER && user.role !== UserRole.ADMIN && (
+                  <button
+                    onClick={() => setIsDriverRequestModalOpen(true)}
+                    className="text-sm text-blue-600 font-bold flex items-center hover:bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 transition w-fit"
+                  >
+                    <Truck size={14} className="mr-1.5"/> Request to be a Driver
+                  </button>
+                )}
                 {user.role === UserRole.STATION_MANAGER && user.managedStationIds && (
                      <p className="text-xs text-purple-600 font-medium mb-2">{t('station.managed_station_id')} {user.managedStationIds.join(', ')}</p>
                 )}
-                <button 
+                <button
                     onClick={logout}
                     className="text-sm text-red-600 font-bold flex items-center hover:bg-red-50 px-3 py-1.5 rounded-full border border-red-100 transition w-fit"
                 >
@@ -117,7 +138,7 @@ export const MeView: React.FC<Props> = ({ userLocation }) => {
                     <User size={24} />
                 </div>
                 <p className="text-gray-500 mb-3 text-sm">{t('me.login_desc')}</p>
-                <button 
+                <button
                     onClick={login}
                     className="bg-black text-white px-6 py-2 rounded-full font-bold text-sm shadow-lg hover:scale-105 transition"
                 >
@@ -127,14 +148,36 @@ export const MeView: React.FC<Props> = ({ userLocation }) => {
         )}
       </div>
 
+      {/* Admin Panel */}
+      {user?.role === UserRole.ADMIN && (
+        <div className="p-4 bg-white border-b mb-2">
+          <h3 className="font-bold text-gray-800 text-lg mb-3">Admin Panel</h3>
+          <button
+            onClick={() => navigate('/admin/driver-requests')}
+            className="w-full flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:shadow-md transition"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-gray-200 rounded-xl flex items-center justify-center text-gray-600">
+                <Truck size={24} />
+              </div>
+              <div className="text-left">
+                <h3 className="font-bold text-gray-900">Driver Requests</h3>
+                <p className="text-sm text-gray-500">Review pending requests</p>
+              </div>
+            </div>
+            <ChevronRight size={20} className="text-gray-400" />
+          </button>
+        </div>
+      )}
+
       {/* Admin Global Broadcast */}
       {user?.role === UserRole.ADMIN && (
           <div className="p-4 bg-red-50 border-b border-red-100 mb-2">
               <h3 className="font-bold text-red-800 text-sm flex items-center mb-2">
                   <Bell size={16} className="mr-2"/> {t('admin.global_alert_broadcast')}
               </h3>
-              <textarea 
-                  className="w-full p-2 text-sm border border-red-200 rounded-lg mb-2 focus:ring-red-500 focus:border-red-500" 
+              <textarea
+                  className="w-full p-2 text-sm border border-red-200 rounded-lg mb-2 focus:ring-red-500 focus:border-red-500"
                   rows={2}
                   placeholder={t('admin.alert_placeholder')}
                   value={alertText}
@@ -149,7 +192,7 @@ export const MeView: React.FC<Props> = ({ userLocation }) => {
       {/* My Stations - Station Owner Section */}
       {user && ownedStationsCount > 0 && (
           <div className="p-4 bg-white border-b mb-2">
-              <button 
+              <button
                   onClick={() => navigate('/my-stations')}
                   className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-teal-50 to-emerald-50 rounded-xl border border-teal-100 hover:shadow-md transition"
               >
@@ -170,10 +213,10 @@ export const MeView: React.FC<Props> = ({ userLocation }) => {
       {/* Saved List */}
       <div className="p-4">
           <h3 className="font-bold text-gray-800 text-lg mb-3 flex items-center">
-             {t('me.saved_stations')} 
+             {t('me.saved_stations')}
              <span className="ml-2 text-xs bg-gray-200 text-gray-600 px-2 py-0.5 rounded-full">{savedStations.length}</span>
           </h3>
-          
+
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-16">
                 <div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent"></div>
@@ -181,11 +224,11 @@ export const MeView: React.FC<Props> = ({ userLocation }) => {
             </div>
           ) : savedStations.length > 0 ? (
               savedStations.map(s => (
-                  <StationCard 
-                      key={s.id} 
-                      station={s} 
-                      userLocation={userLocation} 
-                      onUpdate={refreshFavorites} 
+                  <StationCard
+                      key={s.id}
+                      station={s}
+                      userLocation={userLocation}
+                      onUpdate={refreshFavorites}
                       mode="RESIDENT"
                   />
               ))
