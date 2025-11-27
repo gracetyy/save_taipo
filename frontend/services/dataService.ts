@@ -2,8 +2,6 @@ import { apiClient } from './apiClient';
 import { Station, DeliveryTask, UserRole, OFFERING_CATEGORIES } from '../../types';
 import { getFirestore, collection, onSnapshot } from 'firebase/firestore';
 import { app } from './firebase';
-
-const db = getFirestore(app);
 // Local storage keys for offline/fallback data
 const STATIONS_CACHE_KEY = 'resq_stations_cache';
 const USER_VOTES_CACHE_KEY = 'resq_user_votes_cache';
@@ -313,13 +311,20 @@ export const addOfferingItem = async (categoryKey: string, item: string) => {
 };
 
 export const subscribeToCategories = (callback: (categories: Record<string, string[]>) => void) => {
-  const categoriesCol = collection(db, 'offering_categories');
-  const unsubscribe = onSnapshot(categoriesCol, (snapshot) => {
-    const categories: Record<string, string[]> = {};
-    snapshot.forEach(doc => {
-      categories[doc.id] = doc.data().items;
+  try {
+    const db = getFirestore(app);
+    const categoriesCol = collection(db, 'offering_categories');
+    const unsubscribe = onSnapshot(categoriesCol, (snapshot) => {
+      const categories: Record<string, string[]> = {};
+      snapshot.forEach(doc => {
+        categories[doc.id] = doc.data().items;
+      });
+      callback(categories);
     });
-    callback(categories);
-  });
-  return unsubscribe;
+    return unsubscribe;
+  } catch (error) {
+    console.warn('Firestore not available, real-time category updates disabled.', error);
+    // Return a dummy unsubscribe function
+    return () => { };
+  }
 };
