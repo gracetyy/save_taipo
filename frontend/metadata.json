@@ -1,0 +1,7 @@
+{
+  "name": "大埔救急",
+  "description": "大埔救急",
+  "requestFramePermissions": [
+    "geolocation"
+  ]
+}

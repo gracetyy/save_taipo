@@ -1,0 +1,46 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Stations collection - readable by all, writable by authenticated users
+    match /stations/{stationId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Delivery tasks - readable by authenticated users
+    match /tasks/{taskId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null;
+    }
+    
+    // User votes - each user can only access their own votes
+    match /votes/{voteId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null;
+    }
+    
+    // Global alerts - readable by all, writable by admins
+    match /alerts/{alertId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+    
+    // User profiles
+    match /users/{userId} {
+      allow read: if request.auth != null;
+      allow write: if request.auth != null && request.auth.uid == userId;
+    }
+    
+    // Favorites - user-specific
+    match /favorites/{favoriteId} {
+      allow read, write: if request.auth != null && request.auth.uid == resource.data.userId;
+      allow create: if request.auth != null;
+    }
+
+    // Offering Categories - readable by all, writable by admins
+    match /offering_categories/{categoryId} {
+      allow read: if true;
+      allow write: if request.auth != null && request.auth.token.admin == true;
+    }
+  }
+}
