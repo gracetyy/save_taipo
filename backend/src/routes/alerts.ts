@@ -4,7 +4,7 @@ import { firestore } from '../services/firebase';
 const router = Router();
 
 // Get global alert
-router.get('/', async (req, res) => {
+router.get('/global', async (req, res) => {
     try {
         const alertDoc = await firestore.collection('settings').doc('globalAlert').get();
         if (alertDoc.exists) {
@@ -19,7 +19,7 @@ router.get('/', async (req, res) => {
 });
 
 // Set global alert
-router.post('/', async (req, res) => {
+router.post('/global', async (req, res) => {
     try {
         const { message, userId } = req.body;
         await firestore.collection('settings').doc('globalAlert').set({
@@ -35,7 +35,7 @@ router.post('/', async (req, res) => {
 });
 
 // Clear global alert
-router.delete('/', async (req, res) => {
+router.delete('/global', async (req, res) => {
     try {
         await firestore.collection('settings').doc('globalAlert').delete();
         res.json({ success: true });

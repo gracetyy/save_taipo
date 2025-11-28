@@ -12,14 +12,20 @@ interface DriverRequestModalProps {
 
 export const DriverRequestModal: React.FC<DriverRequestModalProps> = ({ user, onClose, onComplete }) => {
   const [vehicleType, setVehicleType] = useState<VehicleType>(VehicleType.CAR);
+  const [licensePlate, setLicensePlate] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { showToast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!licensePlate.trim()) {
+        showToast('Please enter your license plate number.', 'error');
+        return;
+    }
+
     setIsSubmitting(true);
     try {
-      await apiClient.post('/driver-requests', { userId: user.id, vehicleType });
+      await apiClient.post('/roles/request-driver', { vehicleType, licensePlate });
       showToast('Driver request submitted successfully!', 'success');
       onComplete();
       onClose();
@@ -55,6 +61,18 @@ export const DriverRequestModal: React.FC<DriverRequestModalProps> = ({ user, on
                 <option value={VehicleType.TRUCK}>Truck</option>
                 <option value={VehicleType.MOTORCYCLE}>Motorcycle</option>
               </select>
+            </div>
+            <div>
+              <label htmlFor="licensePlate" className="block text-sm font-medium text-gray-700">License Plate</label>
+              <input
+                type="text"
+                id="licensePlate"
+                value={licensePlate}
+                onChange={(e) => setLicensePlate(e.target.value)}
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
+                placeholder="e.g. AB1234"
+                required
+              />
             </div>
           </div>
           <div className="p-4 border-t flex justify-end">
