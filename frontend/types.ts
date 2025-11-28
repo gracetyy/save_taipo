@@ -67,6 +67,7 @@ export interface UserProfile {
     lastLogin: number; // Timestamp
 
     driverProfile?: DriverProfile;
+    vehicleType?: string; // Legacy
 
     // For STATION_MANAGER
     managedStationIds?: string[];

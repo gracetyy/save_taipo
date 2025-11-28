@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { UserRole } from '../../types';
+import { UserRole } from '../types';
 import { apiClient } from '../services/apiClient';
 import { ChevronRight, User, Heart, Truck, Users, LayoutDashboard } from 'lucide-react';
 

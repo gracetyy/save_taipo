@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Truck, X, Loader2 } from 'lucide-react';
-import { UserProfile, VehicleType } from '../../types';
+import { UserProfile, VehicleType } from '../types';
 import { apiClient } from '../services/apiClient';
 import { useToast } from '../contexts/ToastContext';
 
@@ -11,7 +11,7 @@ interface DriverRequestModalProps {
 }
 
 export const DriverRequestModal: React.FC<DriverRequestModalProps> = ({ user, onClose, onComplete }) => {
-  const [vehicleType, setVehicleType] = useState<VehicleType>('CAR');
+  const [vehicleType, setVehicleType] = useState<VehicleType>(VehicleType.CAR);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { showToast } = useToast();
 
@@ -50,10 +50,10 @@ export const DriverRequestModal: React.FC<DriverRequestModalProps> = ({ user, on
                 onChange={(e) => setVehicleType(e.target.value as VehicleType)}
                 className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm rounded-md"
               >
-                <option value="CAR">Car</option>
-                <option value="VAN">Van</option>
-                <option value="TRUCK">Truck</option>
-                <option value="MOTORCYCLE">Motorcycle</option>
+                <option value={VehicleType.CAR}>Car</option>
+                <option value={VehicleType.VAN}>Van</option>
+                <option value={VehicleType.TRUCK}>Truck</option>
+                <option value={VehicleType.MOTORCYCLE}>Motorcycle</option>
               </select>
             </div>
           </div>

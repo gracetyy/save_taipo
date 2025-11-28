@@ -2,7 +2,7 @@
 declare const L: any;
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Station, StationType, SupplyStatus, CrowdStatus, NeedItem } from '../../types';
+import { Station, StationType, SupplyStatus, CrowdStatus, NeedItem } from '../types';
 import { addStation, addOfferingItem, addOfferingCategory } from '../services/dataService';
 import { X, MapPin, Crosshair, Loader2, Plus, Minus, ChevronDown, ChevronUp, Map, Check } from 'lucide-react';
 import { CategorySelector } from './CategorySelector';

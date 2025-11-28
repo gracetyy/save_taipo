@@ -3,7 +3,7 @@ import { db } from '../index';
 import { authMiddleware } from '../middleware/authMiddleware';
 import * as admin from 'firebase-admin';
 import { roleMiddleware } from '../middleware/roleMiddleware';
-import { UserRole } from '../../../types';
+import { UserRole } from '../../types';
 
 const router = Router();
 

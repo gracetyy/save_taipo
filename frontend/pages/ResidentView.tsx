@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import useResponsiveMapHeight from '../hooks/useResponsiveMapHeight';
 import { useNavigate } from 'react-router-dom';
-import { Station, StationType, SupplyStatus, UserRole } from '../../types';
+import { Station, StationType, SupplyStatus, UserRole } from '../types';
 import { getStations, calculateDistance } from '../services/dataService';
 import { StationCard } from '../components/StationCard';
 import { CategoryFilter } from '../components/CategoryFilter';

@@ -1,8 +1,6 @@
-
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Station, UserRole } from '../../types';
+import { Station, UserRole } from '../types';
 import { getStations, getFavoriteIds, getGlobalAlert, setGlobalAlert } from '../services/dataService';
 import { StationCard } from '../components/StationCard';
 import { useAuth } from '../contexts/AuthContext';
@@ -193,7 +191,7 @@ export const MeView: React.FC<Props> = ({ userLocation }) => {
       {user && ownedStationsCount > 0 && (
           <div className="p-4 bg-white border-b mb-2">
               <button
-                  onClick={() => navigate('/my-stations')}
+                  onClick={() => navigate('/manager/stations')}
                   className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-teal-50 to-emerald-50 rounded-xl border border-teal-100 hover:shadow-md transition"
               >
                   <div className="flex items-center gap-3">

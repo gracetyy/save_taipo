@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { OFFERING_CATEGORIES } from '../../types';
+import { OFFERING_CATEGORIES } from '../types';
 import { useLanguage } from '../contexts/LanguageContext';
 import { X, Check } from 'lucide-react';
 

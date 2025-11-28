@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { db } from '../index';
 import { authMiddleware, AuthenticatedRequest } from '../middleware/authMiddleware';
 import { roleMiddleware } from '../middleware/roleMiddleware';
-import { UserRole } from '../../../types';
+import { UserRole } from '../../types';
 
 const router = Router();
 

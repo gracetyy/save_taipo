@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Station, SupplyStatus, NeedItem } from '../../types';
+import { Station, SupplyStatus, NeedItem } from '../types';
 import { updateStation, addOfferingItem, addOfferingCategory } from '../services/dataService';
 import { CategorySelector } from './CategorySelector';
 import { useToast } from '../contexts/ToastContext';

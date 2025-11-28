@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User as FirebaseUser } from 'firebase/auth';
 import { auth, googleProvider } from '../services/firebase';
 import { signInWithPopup, signOut, onAuthStateChanged } from 'firebase/auth';
-import { UserProfile, UserRole, UserStatus } from '../../types';
+import { UserProfile, UserRole, UserStatus } from '../types';
 import { apiClient } from '../services/apiClient';
 
 interface AuthContextType {

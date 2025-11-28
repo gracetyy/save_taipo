@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import * as admin from 'firebase-admin';
-import { Station, UserRole } from '../../../types';
+import { Station, UserRole } from '../../types';
 import { authMiddleware } from '../middleware/authMiddleware';
 import { roleMiddleware } from '../middleware/roleMiddleware';
 

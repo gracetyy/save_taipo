@@ -1,25 +1,31 @@
 {
   "compilerOptions": {
-    "target": "ES2020",
+    "target": "ESNext",
     "useDefineForClassFields": true,
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
+    "allowJs": false,
     "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "module": "ESNext",
     "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "react-jsx",
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["./*"]
+      "../../types": ["./types.ts"],
+      "../../services/dataService": ["./services/dataService.ts"],
+      "../../contexts/*": ["./contexts/*"],
+      "../../components/*": ["./components/*"],
+      "../types": ["./types.ts"],
     }
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["vite.config.ts", "vite.config.d.ts"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["./**/*.ts", "./**/*.tsx", "types.ts", "services/dataService.ts"],
+  "exclude": ["node_modules"]
 }

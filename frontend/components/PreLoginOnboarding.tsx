@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { User, Heart } from 'lucide-react';
-import { UserRole } from '../../types';
+import { UserRole } from '../types';
 
 interface PreLoginOnboardingProps {
   onRoleSelected: (role: UserRole) => void;

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { OFFERING_CATEGORIES } from '../../types';
+import { OFFERING_CATEGORIES } from '../types';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
 import { subscribeToCategories } from '../services/dataService';
