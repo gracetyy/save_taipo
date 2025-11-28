@@ -197,31 +197,79 @@ export interface Coordinates {
 
 // Data Structure for Categorized Offerings
 export const OFFERING_CATEGORIES: Record<string, string[]> = {
-    'cat.accommodation': [
-        '住宿', '暫住', '宿位', '庇護中心', '休息處', '洗澡設施', '洗手間', '水機', '廚房'
+    'cat.manpower': [
+        '一般義工', '醫護人員', '社工', '車手', '心理輔導員'
     ],
-    'cat.food_drink': [
-        '食物', '飲品', '樽裝水', '乾糧', '杯麵', '熱食', '能量棒', '湯水', '罐頭', '餐具', '飯盒', '紙杯'
+    'cat.warmth': [
+        '保暖內衣', '求毛氈', '反光錫紙', '暖包'
     ],
-    'cat.warmth_sleep': [
-        '保暖物資', '毛巾', '毛氈', '被鋪', '被', '褸', '襪', '暖包', '睡袋', '枕頭', '地墊', '露營帳篷', 'Heat tech', '床墊', '眼罩'
+    'cat.food_water': [
+        '熱水', '水', '麵包', '能量啫喱', '乾糧', '杯麵', '熱食', '湯水', '罐頭', '紙杯'
     ],
-    'cat.hygiene': [
-        '牙刷', '牙膏', '口罩', '豬咀', '濾罐', 'BB尿片', '成人尿片', '清潔用品', '沐浴露', '洗頭水', '濕紙巾', '紙巾', '一次性內衣褲', '拖鞋', "內衣褲", '衛生用品', 'N95'
+    'cat.hygiene_wash': [
+        '大毛巾', '洗頭水', '沐浴露', '垃圾袋', '摺凳', '番梘', '毛巾', '牙刷', '牙膏'
     ],
     'cat.electronics': [
-        '叉電線', '尿袋', '火牛', '拖板', '電池', '電筒', 'SIM Card'
+        '尿袋', '照明用品', '差電線', '叉電線', '火牛', '拖板', '電池', 'SIM Card'
     ],
-    'cat.medical': [
-        '急救', '急救包', '輪椅'
+    'cat.bedding': [
+        '床墊', '枕頭', '被', '眼罩', '耳塞', '睡袋', '地墊', '露營帳篷'
+    ],
+    'cat.sanitary': [
+        '75%支裝酒精', '濕紙巾', '女性用品', '紙巾', '口罩', '豬咀', '濾罐', 'N95'
     ],
     'cat.pets': [
-        '寵物氧氣機', '寵物飛機籠', '寵物暫托家庭', '貓糧', '狗糧', '獸醫服務', '寵物救援'
+        '貓狗罐頭', '貓狗乾糧', '寵物衣服', '藥品', '寵物氧氣機', '寵物飛機籠', '寵物暫托家庭', '獸醫服務', '寵物救援'
     ],
-    'cat.service': [
-        '看顧長者', '兒童暫託', '心理支援'
+    'cat.baby': [
+        '奶樽', '奶粉', '尿片', 'BB尿片'
     ],
-    'cat.tools': [
-        '紅白藍膠袋', '大聲公'
+    'cat.others': [
+        '文具', '紅白藍膠袋', '大聲公', '成人尿片', '拖鞋', '內衣褲', '一次性內衣褲'
     ]
+};
+
+// Lookup table for item name normalization/translation if needed in future
+// Currently storing Chinese name as key, and could store English name or other metadata as value.
+// For now, it's just a reference.
+export const ITEM_LOOKUP_TABLE: Record<string, { key: string }> = {
+    '一般義工 General volunteers': { key: '一般義工' },
+    '醫護人員 medic': { key: '醫護人員' },
+    '社工 social worker': { key: '社工' },
+    '車手 driver': { key: '車手' },
+    '心理輔導員 psychological counselor': { key: '心理輔導員' },
+    '保暖內衣': { key: '保暖內衣' },
+    '求毛氈': { key: '求毛氈' },
+    '反光錫紙': { key: '反光錫紙' },
+    '熱水 hot water (連紙杯）': { key: '熱水' },
+    '水': { key: '水' },
+    '麵包(獨立包裝)': { key: '麵包' },
+    '能量啫喱': { key: '能量啫喱' },
+    '(大)毛巾 towel': { key: '大毛巾' },
+    '（細支裝為主）洗頭水 Shampoo': { key: '洗頭水' },
+    '（細支裝為主）沐浴露 body wash': { key: '沐浴露' },
+    '垃圾袋 trash bag': { key: '垃圾袋' },
+    '摺凳 Chair': { key: '摺凳' },
+    '番梘': { key: '番梘' },
+    '尿袋/差電器/插蘇 Power Bank、Charger': { key: '尿袋' },
+    '照明用品（乾電）': { key: '照明用品' },
+    '差電線 Power Cable': { key: '差電線' },
+    '床墊 Mattress': { key: '床墊' },
+    '枕頭': { key: '枕頭' },
+    '被': { key: '被' },
+    '眼罩': { key: '眼罩' },
+    '耳塞': { key: '耳塞' },
+    '75%支裝酒精': { key: '75%支裝酒精' },
+    '濕紙巾': { key: '濕紙巾' },
+    '女性用品': { key: '女性用品' },
+    '貓狗罐頭': { key: '貓狗罐頭' },
+    '貓狗乾糧': { key: '貓狗乾糧' },
+    '寵物衣服、保暖用物品': { key: '寵物衣服' },
+    '藥品': { key: '藥品' },
+    '奶樽': { key: '奶樽' },
+    '奶粉': { key: '奶粉' },
+    '尿片': { key: '尿片' },
+    '文具 （粗marker、膠紙、界刀）': { key: '文具' },
+    '紅白藍膠袋': { key: '紅白藍膠袋' },
+    '大聲公': { key: '大聲公' }
 };
