@@ -56,6 +56,7 @@ export const AddStationModal: React.FC<Props> = ({ isOpen, onClose, onStationAdd
   const [contact, setContact] = useState('');
   const [contactLink, setContactLink] = useState('');
   const [sourceUrl, setSourceUrl] = useState('');
+  const [remarks, setRemarks] = useState('');
   const [offerings, setOfferings] = useState<string[]>([]);
   const [needs, setNeeds] = useState<NeedItem[]>([]);
   
@@ -276,6 +277,7 @@ export const AddStationModal: React.FC<Props> = ({ isOpen, onClose, onStationAdd
         sourceUrl,
         verifiedAt: Date.now()
       } : undefined,
+      remarks: remarks || undefined,
       ownerId: user?.id
     };
 
@@ -535,6 +537,19 @@ export const AddStationModal: React.FC<Props> = ({ isOpen, onClose, onStationAdd
             />
           </div>
           
+          
+          {/* Remarks */}
+          <div>
+            <label className="text-gray-500 text-xs font-bold uppercase">Remarks</label>
+            <textarea
+              className="w-full mt-1 p-2.5 rounded-lg bg-gray-50 text-gray-900 text-sm border border-gray-300"
+              placeholder="Any additional notes about the station (hours, special requirements, notes)"
+              value={remarks}
+              onChange={e => setRemarks(e.target.value)}
+              rows={3}
+            />
+          </div>
+
           {/* Submit */}
           <div className="flex gap-2 pt-2">
             <button 

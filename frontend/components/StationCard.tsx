@@ -94,6 +94,11 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
                         <MapPin size={14} className="mr-1 shrink-0"/>
                         <span className="truncate">{station.address}</span>
                         {distance && <span className="ml-2 text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">{distance} km</span>}
+                    {station.remarks && (
+                        <div className="mt-1 text-gray-500 text-sm line-clamp-2">
+                            {station.remarks}
+                        </div>
+                    )}
                     </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">

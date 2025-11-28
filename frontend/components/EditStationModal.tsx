@@ -16,6 +16,7 @@ export const EditStationModal: React.FC<EditStationModalProps> = ({ station, onC
     const [editStatus, setEditStatus] = useState<SupplyStatus>(station.status);
     const [editNeeds, setEditNeeds] = useState<NeedItem[]>(station.needs || []);
     const [editOfferings, setEditOfferings] = useState<string[]>(station.offerings || []);
+    const [editRemarks, setEditRemarks] = useState(station.remarks || '');
     const [showNeedsSelector, setShowNeedsSelector] = useState(false);
 
     const handleSave = async () => {
@@ -26,6 +27,7 @@ export const EditStationModal: React.FC<EditStationModalProps> = ({ station, onC
             status: editStatus,
             needs: editNeeds,
             offerings: editOfferings,
+            remarks: editRemarks,
             lastUpdated: Date.now()
         };
         try {
@@ -99,6 +101,11 @@ export const EditStationModal: React.FC<EditStationModalProps> = ({ station, onC
                             onAddItem={(_cat, item) => { addOfferingItem(_cat, item); setEditOfferings(prev => [...prev, item]); }}
                             onAddCategory={(cat) => addOfferingCategory(cat)}
                         />
+                    </div>
+
+                    <div>
+                        <label className="text-xs font-bold text-gray-500 uppercase block mb-1">Remarks</label>
+                        <textarea value={editRemarks} onChange={e => setEditRemarks(e.target.value)} rows={3} className="w-full p-2 border rounded-lg" />
                     </div>
 
                     <div>

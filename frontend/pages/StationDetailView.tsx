@@ -265,6 +265,14 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
                )}
           </div>
           
+          {/* Remarks */}
+          {station.remarks && (
+              <div className="mb-8">
+                  <h3 className="font-bold text-gray-900 mb-3">Remarks</h3>
+                  <div className="text-gray-700 text-sm whitespace-pre-wrap">{station.remarks}</div>
+              </div>
+          )}
+          
           <div className="text-xs text-gray-400 text-center border-t pt-4">
               <Clock size={12} className="inline mr-1"/>
               Last updated: {new Date(station.lastUpdated).toLocaleString()}

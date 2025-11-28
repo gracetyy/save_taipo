@@ -25,6 +25,7 @@ const EditStationDetails: React.FC<Props> = ({ station, onClose, onStationUpdate
   const [showNeedsSelector, setShowNeedsSelector] = useState(false);
   const [showMapPicker, setShowMapPicker] = useState(false);
   const [isLocating, setIsLocating] = useState(false);
+  const [editRemarks, setEditRemarks] = useState(station.remarks || '');
   const mapRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
   const markerRef = useRef<any>(null);
@@ -71,7 +72,7 @@ const EditStationDetails: React.FC<Props> = ({ station, onClose, onStationUpdate
   }, [editLat, editLng]);
 
   const handleSave = async () => {
-    const updated = { ...station, name: editName, address: editAddress, lat: editLat, lng: editLng, status: editStatus, needs: editNeeds, offerings: editOfferings };
+        const updated = { ...station, name: editName, address: editAddress, lat: editLat, lng: editLng, status: editStatus, needs: editNeeds, offerings: editOfferings, remarks: editRemarks };
     await updateStation(updated);
     onStationUpdated(updated);
     showToast('Station updated successfully', 'success');
@@ -273,6 +274,16 @@ const EditStationDetails: React.FC<Props> = ({ station, onClose, onStationUpdate
                    onAddItem={(_cat, item) => { addOfferingItem(_cat, item); setEditOfferings(prev => [...prev, item]); }}
                    onAddCategory={(cat) => addOfferingCategory(cat)}
                />
+          {/* Remarks */}
+          <div>
+              <label className="text-gray-500 text-xs font-bold uppercase">Remarks</label>
+              <textarea
+                  className="w-full mt-1 p-2 rounded bg-gray-50 text-gray-900 text-sm border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary"
+                  value={editRemarks}
+                  onChange={e => setEditRemarks(e.target.value)}
+                  rows={3}
+              />
+          </div>
            </div>
 
            {/* Needs Selector with Quantity */}

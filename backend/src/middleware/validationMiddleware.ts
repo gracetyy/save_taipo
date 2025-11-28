@@ -8,6 +8,7 @@ export const validateStation = [
     body('lng').isFloat({ min: -180, max: 180 }).withMessage('Invalid longitude'),
     body('type').notEmpty().withMessage('Type is required'),
     body('status').notEmpty().withMessage('Status is required'),
+    body('remarks').optional().isString().withMessage('Remarks must be a string'),
     (req: Request, res: Response, next: NextFunction) => {
         const errors = validationResult(req);
         if (!errors.isEmpty()) {

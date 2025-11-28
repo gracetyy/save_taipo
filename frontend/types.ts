@@ -145,6 +145,8 @@ export interface Station {
     ownerId?: string;
     managers?: string[]; // User emails of station managers
     volunteers?: string[]; // User emails of station volunteers
+    /** Misc remarks or comments about the station */
+    remarks?: string;
 }
 
 export interface DeliveryTask {
