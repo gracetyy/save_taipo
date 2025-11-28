@@ -70,7 +70,7 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
             showToast(newStatus ? t('favorite.added') : t('favorite.removed'), "success");
             if (onUpdate) onUpdate();
         } catch (error) {
-             showToast("Failed to update favorite", "error");
+             showToast(t('favorite.update_failed'), "error");
         }
     };
 
@@ -109,7 +109,7 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
                         station.status === SupplyStatus.LOW_STOCK ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 
                         'bg-red-100 text-red-800 border-red-200'
                   }`}>
-                      {t(`status.${station.status.toLowerCase()}`)}
+                      {t(`status.${station.status.toLowerCase()}` as any)}
                   </span>
                   {station.crowdStatus && (
                        <span className={`px-2 py-0.5 rounded text-xs font-bold border flex items-center ${

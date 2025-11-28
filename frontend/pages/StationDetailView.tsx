@@ -188,7 +188,7 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
                         station.status === SupplyStatus.LOW_STOCK ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 
                         'bg-red-100 text-red-800 border-red-200'
                   }`}>
-                      {t(`status.${station.status.toLowerCase()}`)}
+                      {t(`status.${station.status.toLowerCase()}` as any)}
                   </span>
                   {station.crowdStatus && (
                        <span className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center ${

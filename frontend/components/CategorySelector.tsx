@@ -59,7 +59,7 @@ export const CategorySelector: React.FC<Props> = ({
             onClick={() => setExpandedCategory(expandedCategory === category ? null : category)}
             className={categoryButtonClass}
           >
-            {t(category)}
+            {t(category as any)}
             {expandedCategory === category ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
           </button>
           {expandedCategory === category && (
@@ -90,7 +90,7 @@ export const CategorySelector: React.FC<Props> = ({
               <input value={newItemName} onChange={e => setNewItemName(e.target.value)} placeholder={t('btn.add_item')}
                 className="flex-1 p-2 rounded border border-gray-200 text-sm" />
               <select value={newItemCategory} onChange={e => setNewItemCategory(e.target.value)} className="p-2 rounded border border-gray-200 text-sm">
-                {Object.keys(localCategories).map(k => <option key={k} value={k}>{t(k)}</option>)}
+                {Object.keys(localCategories).map(k => <option key={k} value={k}>{t(k as any)}</option>)}
               </select>
               <button onClick={() => {
                 setError(null);

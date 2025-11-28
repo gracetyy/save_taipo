@@ -283,7 +283,7 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
 
   const getTypeLabel = (typeKey: string) => {
     const key = `type.${typeKey.toLowerCase()}`;
-    return t(key);
+    return t(key as any);
   }
 
     // Ensure the map invalidates size when height changes
@@ -460,7 +460,7 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
                      <div className="flex flex-wrap gap-1 mb-3">
                          {selectedItems.map(item => (
                              <span key={item} className="text-[10px] bg-secondary/10 text-secondary border border-secondary/20 px-2 py-0.5 rounded-full font-bold">
-                                 {t(item)}
+                                 {t(item as any)}
                              </span>
                          ))}
                      </div>

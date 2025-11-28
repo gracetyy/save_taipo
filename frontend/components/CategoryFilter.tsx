@@ -72,7 +72,7 @@ export const CategoryFilter: React.FC<Props> = ({ selectedItems, onChange, onClo
                     : 'border-transparent text-gray-500 hover:bg-gray-100'
                 }`}
               >
-                {t(catKey)}
+                {t(catKey as any)}
               </button>
             ))}
           </div>
@@ -106,7 +106,7 @@ export const CategoryFilter: React.FC<Props> = ({ selectedItems, onChange, onClo
                                   : 'bg-white border-gray-200 text-gray-700 hover:border-gray-300'
                             }`}
                          >
-                             <span>{t(item)}</span>
+                             <span>{t(item as any)}</span>
                              {isSelected && <Check size={16} />}
                          </button>
                      );

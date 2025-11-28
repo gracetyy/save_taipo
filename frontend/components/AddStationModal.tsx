@@ -371,7 +371,7 @@ export const AddStationModal: React.FC<Props> = ({ isOpen, onClose, onStationAdd
                 onChange={e => setType(e.target.value as StationType)}
               >
                 {Object.entries(TYPE_KEYS).map(([k, v]) => (
-                  <option key={k} value={k}>{t(v)}</option>
+                  <option key={k} value={k}>{t(v as any)}</option>
                 ))}
               </select>
             </div>
@@ -383,7 +383,7 @@ export const AddStationModal: React.FC<Props> = ({ isOpen, onClose, onStationAdd
                 onChange={e => setCrowdStatus(e.target.value as CrowdStatus)}
               >
                 {Object.entries(CROWD_KEYS).map(([k, v]) => (
-                  <option key={k} value={k}>{t(v)}</option>
+                  <option key={k} value={k}>{t(v as any)}</option>
                 ))}
               </select>
             </div>
@@ -400,7 +400,7 @@ export const AddStationModal: React.FC<Props> = ({ isOpen, onClose, onStationAdd
                   onClick={() => setStatus(s)}
                   className={`flex-1 py-2 text-xs font-bold rounded-lg border ${status === s ? 'bg-primary text-white border-primary' : 'bg-gray-50 text-gray-600 border-gray-300 hover:bg-gray-100'}`}
                 >
-                  {t(getStatusTranslationKey(s))}
+                  {t(getStatusTranslationKey(s) as any)}
                 </button>
               ))}
             </div>

@@ -87,7 +87,7 @@ router.put('/:id', authMiddleware, roleMiddleware([UserRole.ADMIN, UserRole.STAT
 });
 
 // POST claim a task
-router.post('/:id/claim', authMiddleware, roleMiddleware([UserRole.ADMIN, UserRole.STATION_MANAGER]), async (req: Request, res: Response) => {
+router.post('/:id/claim', authMiddleware, roleMiddleware([UserRole.ADMIN, UserRole.STATION_MANAGER, UserRole.DRIVER]), async (req: Request, res: Response) => {
   try {
     const db = getDb();
     const { driverId } = req.body;
@@ -120,7 +120,7 @@ router.post('/:id/claim', authMiddleware, roleMiddleware([UserRole.ADMIN, UserRo
 });
 
 // POST complete a task
-router.post('/:id/complete', authMiddleware, roleMiddleware([UserRole.ADMIN, UserRole.STATION_MANAGER]), async (req: Request, res: Response) => {
+router.post('/:id/complete', authMiddleware, roleMiddleware([UserRole.ADMIN, UserRole.STATION_MANAGER, UserRole.DRIVER]), async (req: Request, res: Response) => {
   try {
     const db = getDb();
     const taskRef = db.collection('tasks').doc(req.params.id);

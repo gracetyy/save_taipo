@@ -31,8 +31,8 @@ export const VolunteerHub: React.FC<Props> = ({ userLocation }) => {
             setTasks(tasksData);
             setStations(stationsData);
         } catch (error) {
-            console.error("Failed to load volunteer data", error);
-            showToast("Failed to load data", "error");
+            console.error(t('volunteer.data_load_error'), error);
+            showToast(t('volunteer.data_load_error'), "error");
         } finally {
             setLoading(false);
         }
@@ -40,30 +40,30 @@ export const VolunteerHub: React.FC<Props> = ({ userLocation }) => {
     fetchData();
   }, []);
 
-  const getStationName = (id: string) => stations.find(s => s.id === id)?.name || 'Unknown Station';
+  const getStationName = (id: string) => stations.find(s => s.id === id)?.name || t('volunteer.unknown_station');
 
   const handleClaim = async (taskId: string) => {
       try {
           await claimTask(taskId);
-          showToast("Task claimed!", "success");
+          showToast(t('volunteer.task_claimed'), "success");
           // Refresh tasks
           const updatedTasks = await getDeliveryTasks();
           setTasks(updatedTasks);
       } catch (error) {
-          showToast("Failed to claim task", "error");
+          showToast(t('volunteer.claim_failed'), "error");
       }
   };
 
   const handleComplete = async (taskId: string) => {
-      if (!window.confirm("Confirm delivery completion?")) return;
+      if (!window.confirm(t('volunteer.confirm_completion'))) return;
       try {
           await completeTask(taskId);
-          showToast("Task completed!", "success");
+          showToast(t('volunteer.task_completed'), "success");
           // Refresh tasks
           const updatedTasks = await getDeliveryTasks();
           setTasks(updatedTasks);
       } catch (error) {
-          showToast("Failed to complete task", "error");
+          showToast(t('volunteer.complete_failed'), "error");
       }
   };
 
@@ -78,7 +78,7 @@ export const VolunteerHub: React.FC<Props> = ({ userLocation }) => {
                 onClick={() => setActiveTab('TASKS')}
                 className={`flex-1 py-3 text-sm font-bold flex items-center justify-center ${activeTab === 'TASKS' ? 'text-primary border-b-2 border-primary' : 'text-gray-500'}`}
             >
-                <Box size={16} className="mr-2"/> Tasks
+                <Box size={16} className="mr-2"/> {t('volunteer.tasks')}
                 {(availableTasks.length + myTasks.length) > 0 && (
                     <span className="ml-2 bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded-full text-xs">
                         {availableTasks.length + myTasks.length}
@@ -89,7 +89,7 @@ export const VolunteerHub: React.FC<Props> = ({ userLocation }) => {
                 onClick={() => setActiveTab('STATIONS')}
                 className={`flex-1 py-3 text-sm font-bold flex items-center justify-center ${activeTab === 'STATIONS' ? 'text-primary border-b-2 border-primary' : 'text-gray-500'}`}
             >
-                <MapPin size={16} className="mr-2"/> Stations
+                <MapPin size={16} className="mr-2"/> {t('volunteer.stations')}
             </button>
         </div>
 
@@ -100,7 +100,7 @@ export const VolunteerHub: React.FC<Props> = ({ userLocation }) => {
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900">{t('nav.volunteer')}</h1>
-                        <p className="text-gray-500 text-sm">Help your community</p>
+                        <p className="text-gray-500 text-sm">{t('volunteer.help_community')}</p>
                     </div>
                     <div className="bg-orange-100 p-2 rounded-full">
                         <HandHeart size={24} className="text-orange-600" />
@@ -111,11 +111,11 @@ export const VolunteerHub: React.FC<Props> = ({ userLocation }) => {
                 <div className="grid grid-cols-2 gap-3 mb-6">
                     <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
                         <span className="text-2xl font-bold text-orange-500">{availableTasks.length}</span>
-                        <span className="text-xs text-gray-500 uppercase font-bold mt-1">Open Tasks</span>
+                        <span className="text-xs text-gray-500 uppercase font-bold mt-1">{t('volunteer.open_tasks')}</span>
                     </div>
                     <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex flex-col items-center justify-center text-center">
                         <span className="text-2xl font-bold text-blue-500">{myTasks.length}</span>
-                        <span className="text-xs text-gray-500 uppercase font-bold mt-1">My Tasks</span>
+                        <span className="text-xs text-gray-500 uppercase font-bold mt-1">{t('volunteer.my_tasks')}</span>
                     </div>
                 </div>
 
@@ -124,21 +124,21 @@ export const VolunteerHub: React.FC<Props> = ({ userLocation }) => {
                     <div className="mb-8">
                         <h2 className="font-bold text-lg mb-3 flex items-center">
                             <CheckCircle size={20} className="mr-2 text-blue-600"/> 
-                            Your Active Tasks
+                            {t('volunteer.my_active_tasks')}
                         </h2>
                         <div className="space-y-3">
                             {myTasks.map(task => (
                                 <div key={task.id} className="bg-white p-4 rounded-xl shadow-md border-l-4 border-blue-500">
                                     <div className="flex justify-between items-start mb-2">
                                         <div>
-                                            <div className="text-xs font-bold text-blue-600 mb-1">IN PROGRESS</div>
+                                            <div className="text-xs font-bold text-blue-600 mb-1">{t('volunteer.in_progress')}</div>
                                             <h3 className="font-bold text-gray-800">{task.items.join(', ')}</h3>
                                         </div>
                                         <button 
                                             onClick={() => handleComplete(task.id)}
                                             className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-bold hover:bg-green-200"
                                         >
-                                            Complete
+                                            {t('volunteer.complete')}
                                         </button>
                                     </div>
                                     <div className="flex items-center text-sm text-gray-600 mt-2">
@@ -157,13 +157,13 @@ export const VolunteerHub: React.FC<Props> = ({ userLocation }) => {
                     <div className="flex items-center justify-between mb-3">
                         <h2 className="font-bold text-lg flex items-center">
                             <Box size={20} className="mr-2 text-orange-600"/> 
-                            Available Tasks
+                            {t('volunteer.available_tasks')}
                         </h2>
                     </div>
                     
                     {availableTasks.length === 0 ? (
                         <div className="text-center py-10 bg-white rounded-xl border border-dashed border-gray-300">
-                            <p className="text-gray-500">No tasks currently available.</p>
+                            <p className="text-gray-500">{t('volunteer.no_tasks')}</p>
                         </div>
                     ) : (
                         <div className="space-y-3">
@@ -172,18 +172,18 @@ export const VolunteerHub: React.FC<Props> = ({ userLocation }) => {
                                     <div className="flex justify-between items-start mb-2">
                                             <div>
                                                 <h3 className="font-bold text-gray-800">{task.items.join(', ')}</h3>
-                                                <p className="text-xs text-gray-400 mt-1">Posted {new Date(task.createdAt).toLocaleDateString()}</p>
+                                                <p className="text-xs text-gray-400 mt-1">{t('volunteer.posted')} {new Date(task.createdAt).toLocaleDateString()}</p>
                                             </div>
                                     </div>
                                     
                                     <div className="flex items-center text-sm text-gray-600 my-3 bg-gray-50 p-2 rounded-lg">
                                         <div className="flex-1 truncate text-center">
-                                            <div className="text-xs text-gray-400 uppercase">From</div>
+                                            <div className="text-xs text-gray-400 uppercase">{t('volunteer.from')}</div>
                                             <div className="font-medium truncate">{getStationName(task.fromStationId)}</div>
                                         </div>
                                         <ArrowRight size={16} className="mx-2 text-gray-300"/>
                                         <div className="flex-1 truncate text-center">
-                                            <div className="text-xs text-gray-400 uppercase">To</div>
+                                            <div className="text-xs text-gray-400 uppercase">{t('volunteer.to')}</div>
                                             <div className="font-medium truncate">{getStationName(task.toStationId)}</div>
                                         </div>
                                     </div>
@@ -192,7 +192,7 @@ export const VolunteerHub: React.FC<Props> = ({ userLocation }) => {
                                         onClick={() => handleClaim(task.id)}
                                         className="w-full bg-orange-500 text-white font-bold py-2 rounded-lg hover:bg-orange-600 transition shadow-sm"
                                     >
-                                        Volunteer for this Task
+                                        {t('volunteer.volunteer_for_task')}
                                     </button>
                                 </div>
                             ))}
