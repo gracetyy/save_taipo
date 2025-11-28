@@ -107,7 +107,7 @@ export const MainLayout = () => {
 
         switch (user.role) {
             case UserRole.ADMIN:
-                links.push({ path: '/admin/dashboard', label: 'Admin', icon: <Shield size={24} /> });
+                links.push({ path: '/admin/users', label: 'Users', icon: <Users size={24} /> });
                 links.push({ path: '/manager/stations', label: t('nav.my_stations'), icon: <Home size={24} /> });
                 links.push({ path: '/volunteer/hub', label: t('nav.volunteer'), icon: <HandHeart size={24} /> });
                 links.push({ path: '/driver/tasks', label: t('nav.logistics'), icon: <Truck size={24} /> });

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { auth as adminAuth } from 'firebase-admin';
 import { firestore } from '../services/firebase';
-import { UserProfile, UserRole, UserStatus } from '../../types';
+import { UserProfile, UserRole, UserStatus } from '../types';
 
 const router = Router();
 

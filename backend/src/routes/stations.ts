@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import * as admin from 'firebase-admin';
-import { Station, UserRole } from '../../types';
+import { Station, UserRole } from '../types';
 import { authMiddleware } from '../middleware/authMiddleware';
 import { roleMiddleware } from '../middleware/roleMiddleware';
 
@@ -243,7 +243,7 @@ router.delete('/:id/needs/:need', authMiddleware, roleMiddleware([UserRole.ADMIN
 
     const needToRemove = req.params.need;
     const stationData = doc.data() as Station;
-    const updatedNeeds = stationData.needs.filter(need => need.item !== needToRemove);
+    const updatedNeeds = stationData.needs.filter((need: any) => need.item !== needToRemove);
 
     await stationRef.update({
       needs: updatedNeeds

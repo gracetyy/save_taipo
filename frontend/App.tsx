@@ -14,6 +14,7 @@ import { UserRole } from './types';
 import { OnboardingTour } from './components/OnboardingTour';
 import { PreLoginOnboarding } from './components/PreLoginOnboarding';
 import DriverRequests from './pages/Admin/DriverRequests';
+import { UserManagement } from './pages/Admin/UserManagement';
 import { MainLayout } from './layouts/MainLayout';
 import { ProtectedRoute } from './components/ProtectedRoute';
 
@@ -79,6 +80,7 @@ const AppContent = () => {
                 {/* Admin Routes */}
                 <Route element={<ProtectedRoute allowedRoles={[UserRole.ADMIN]} />}>
                     <Route path="/admin/driver-requests" element={<DriverRequests />} />
+                    <Route path="/admin/users" element={<UserManagement />} />
                     <Route path="/admin/dashboard" element={<Navigate to="/admin/driver-requests" replace />} />
                 </Route>
                 

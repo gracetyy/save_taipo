@@ -19,43 +19,53 @@ export const UsefulLinksView = () => {
     ];
 
     const websites = [
-        { name: '宏福苑報平安', url: 'https://taipo-fire.web.app/', desc: 'Safety Report' },
-        { name: '大埔火災全港資源整合', url: 'https://opaque-laundry-ab5.notion.site/2b797bbbedf88061b0b3f8970b8642a7?source%EF%BF%BC', desc: 'Resources' },
-        { name: '大埔宏福邨大火支援服務（總表）', url: 'https://docs.google.com/spreadsheets/d/1AnwUGMWTyfpIWZ9FJClav6Qhj_SVVKtgwC5_ttrAsRI/edit?usp=sharing', desc: 'Resources' },
-        { name: '大埔宏福苑互助站', url: 'https://wangfuk-fire-sos.netlify.app/', desc: 'Coordination Platform' },
-        { name: '宏福苑火災援助平台', url: 'https://wang-fuk-connect.lovable.app/', desc: 'Coordination Platform' },
-        { name: '大埔宏福苑緊急資源簿', url: 'https://v0-emergency-resource-app-neon.vercel.app/', desc: 'Emergency Resource Book' },
-        { name: '宏福苑消息', url: 'https://blaze-info.vercel.app/', desc: 'Info List' },
-        { name: '香港火災救援信息聚合平台', url: 'https://telegram-rescue-3bhcgua4.manus.space/', desc: 'Coordination Platform' },
-        { name: '大埔宏福苑協尋與救助平台', url: 'https://taipo1126.com/volunteer/tasks?brid=LsIpilOE9-hSWQw_heN91Q', desc: 'Coordination Platform' },
+        { name: '宏福苑報平安', url: 'https://taipo-fire.web.app/'},
+        { name: '大埔火災全港資源整合', url: 'https://opaque-laundry-ab5.notion.site/2b797bbbedf88061b0b3f8970b8642a7?source%EF%BF%BC'},
+        { name: '大埔宏福邨大火支援服務（總表）', url: 'https://docs.google.com/spreadsheets/d/1AnwUGMWTyfpIWZ9FJClav6Qhj_SVVKtgwC5_ttrAsRI/edit?usp=sharing'},
+        { name: '大埔宏福苑互助站', url: 'https://wangfuk-fire-sos.netlify.app/'},
+        { name: '宏福苑火災援助平台', url: 'https://wang-fuk-connect.lovable.app/'},
+        { name: '大埔宏福苑緊急資源簿', url: 'https://v0-emergency-resource-app-neon.vercel.app/'},
+        { name: '宏福苑消息', url: 'https://blaze-info.vercel.app/'},
+        { name: '香港火災救援信息聚合平台', url: 'https://telegram-rescue-3bhcgua4.manus.space/'},
+        { name: '大埔宏福苑協尋與救助平台', url: 'https://taipo1126.com/volunteer/tasks?brid=LsIpilOE9-hSWQw_heN91Q'},
     ];
 
     const resident_websites = [
-        { name: '宏福苑報平安', url: 'https://taipo-fire.web.app/', desc: 'Reporting safety' },
-        { name: '大埔火災全港150+資源整合', url: 'https://opaque-laundry-ab5.notion.site/2b797bbbedf88061b0b3f8970b8642a7', desc: 'Resources List' },
-        { name: '大埔宏福邨大火支援服務（總表）', url: 'https://docs.google.com/spreadsheets/d/1AnwUGMWTyfpIWZ9FJClav6Qhj_SVVKtgwC5_ttrAsRI/edit?usp=sharing', desc: 'Item Offerings' },
-        { name: '大埔宏福苑互助站', url: 'https://wangfuk-fire-sos.netlify.app/', desc: 'Support Platform' },
-        { name: '宏福苑火災援助平台', url: 'https://wang-fuk-connect.lovable.app/', desc: 'Support Platform' },
-        { name: '大埔宏福苑緊急資源簿', url: 'https://v0-emergency-resource-app-neon.vercel.app/', desc: 'Emergency Resources' },
-        { name: '宏福苑消息', url: 'https://blaze-info.vercel.app/', desc: 'Info Summary' },
-    ];
+        { name: '宏福苑報平安', url: 'https://taipo-fire.web.app/'},
+        { name: '大埔火災全港150+資源整合', url: 'https://opaque-laundry-ab5.notion.site/2b797bbbedf88061b0b3f8970b8642a7'},
+        { name: '大埔宏福邨大火支援服務（總表）', url: 'https://docs.google.com/spreadsheets/d/1AnwUGMWTyfpIWZ9FJClav6Qhj_SVVKtgwC5_ttrAsRI/edit?usp=sharing'},
+        { name: '大埔宏福苑互助站', url: 'https://wangfuk-fire-sos.netlify.app/'},
+        { name: '宏福苑火災援助平台', url: 'https://wang-fuk-connect.lovable.app/'},
+        { name: '大埔宏福苑緊急資源簿', url: 'https://v0-emergency-resource-app-neon.vercel.app/'},
+        { name: '宏福苑消息', url: 'https://blaze-info.vercel.app/'},
+        { name: '宏福苑火警尋親庇護中心即時名單', url: 'https://tai-po-wangfuk-fire-family-search.vercel.app/'},
+        { name: '緊急寵物救援平台', url: 'https://taipofire-petrescue.vercel.app/#/'},
+        ];
+
     const volunteer_websites = [
-        { name: '宏福苑報平安', url: 'https://taipo-fire.web.app/', desc: 'Reporting safety' },
-        { name: '大埔火災全港150+資源整合', url: 'https://opaque-laundry-ab5.notion.site/2b797bbbedf88061b0b3f8970b8642a7', desc: 'Resources List' },
-        { name: '大埔宏福邨大火支援服務（總表）', url: 'https://docs.google.com/spreadsheets/d/1AnwUGMWTyfpIWZ9FJClav6Qhj_SVVKtgwC5_ttrAsRI/edit?usp=sharing', desc: 'Item Offerings' },
-        { name: '大埔宏福苑互助站', url: 'https://wangfuk-fire-sos.netlify.app/', desc: 'Support Platform' },
-        { name: '宏福苑火災援助平台', url: 'https://wang-fuk-connect.lovable.app/', desc: 'Support Platform' },
-        { name: '大埔宏福苑緊急資源簿', url: 'https://v0-emergency-resource-app-neon.vercel.app/', desc: 'Emergency Resources' },
-        { name: '宏福苑消息', url: 'https://blaze-info.vercel.app/', desc: 'Info Summary' },
-        { name: '香港火災救援信息聚合平台', url: 'https://telegram-rescue-3bhcgua4.manus.space/', desc: 'Volunteer Coordination Platform' },
-        { name: '大埔宏福苑協尋與救助平台', url: 'https://taipo1126.com/volunteer/tasks?brid=LsIpilOE9-hSWQw_heN91Q', desc: 'Volunteer Coordination Platform' },
-        { name: '大埔火災捐款資訊整合', url: 'https://taipo-fire-donation.pages.dev/', desc: 'Donation Info' },
+        { name: '宏福苑報平安', url: 'https://taipo-fire.web.app/'},
+        { name: '大埔火災全港150+資源整合', url: 'https://opaque-laundry-ab5.notion.site/2b797bbbedf88061b0b3f8970b8642a7'},
+        { name: '大埔宏福邨大火支援服務（總表）', url: 'https://docs.google.com/spreadsheets/d/1AnwUGMWTyfpIWZ9FJClav6Qhj_SVVKtgwC5_ttrAsRI/edit?usp=sharing'},
+        { name: '物資供應總覽', url: 'https://docs.google.com/spreadsheets/d/1W8A40TCVAY5prHNyVk-TqdSv2EumkVvN9l7LoUrY8-w/edit?gid=0#gid=0'},
+        { name: '大埔火災物資點算組', url: 'https://docs.google.com/forms/d/e/1FAIpQLSe_9mEGHylYbvnvhMnrZ_7WuIzG9CDVSzj5FZ1jkBHIs8dWlQ/viewform'},
+        { name: '大埔物資供應總覽', url: 'https://cswbrian.github.io/help-taipo/'},
+        { name: '大埔宏福苑互助站', url: 'https://wangfuk-fire-sos.netlify.app/'},
+        { name: '宏福苑火災援助平台', url: 'https://wang-fuk-connect.lovable.app/'},
+        { name: '大埔宏福苑緊急資源簿', url: 'https://v0-emergency-resource-app-neon.vercel.app/'},
+        { name: '宏福苑消息', url: 'https://blaze-info.vercel.app/'},
+        { name: '香港火災救援信息聚合平台', url: 'https://telegram-rescue-3bhcgua4.manus.space/'},
+        { name: '大埔宏福苑協尋與救助平台', url: 'https://taipo1126.com/volunteer/tasks?brid=LsIpilOE9-hSWQw_heN91Q'},
+        { name: '宏福苑消息', url: 'https://blaze-info.vercel.app/'},
+        { name: '宏福苑火警尋親庇護中心即時名單', url: 'https://tai-po-wangfuk-fire-family-search.vercel.app/'},
+        { name: '緊急寵物救援平台', url: 'https://taipofire-petrescue.vercel.app/#/'},
+        { name: '災害訊息查證', url: 'https://tai-po-msg-frontend-fcw9.vercel.app/'},
+        { name: '直播監控 (HOY/TVB/ANN/HK01)', url: 'https://cslfelix.github.io/hknews/'},
     ];
+
     return (
         <div className="pb-24 min-h-screen bg-white">
             <div className="sticky top-0 bg-white/95 backdrop-blur-sm z-50 p-4 border-b">
                 <h1 className="text-xl font-bold">{t('nav.links')}</h1>
-                <p className="text-xs text-gray-500">{t('links.desc')}</p>
             </div>
 
             <div className="p-4 space-y-6">
@@ -104,7 +114,6 @@ export const UsefulLinksView = () => {
                                     <h3 className="font-bold text-gray-900">{site.name}</h3>
                                     <ExternalLink size={16} className="text-gray-400" />
                                 </div>
-                                <p className="text-xs text-gray-500 mb-2">{site.desc}</p>
                                 <div className="text-[10px] text-blue-600 truncate bg-blue-50 px-2 py-1 rounded inline-block max-w-full">
                                     {site.url}
                                 </div>

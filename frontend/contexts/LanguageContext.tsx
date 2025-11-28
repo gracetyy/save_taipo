@@ -14,13 +14,13 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 const translations: Record<Language, Record<string, string>> = {
   zh: {
     // Navigation & Common
-    'nav.resident': '居民',
+    'nav.resident': '物資站',
     'nav.resources': '搵資源',
     'nav.volunteer': '幫手',
     'nav.logistics': '車手/物流',
     'nav.safety': '安全資訊',
     'nav.links': '有用連結',
-    'nav.my_stations': '站點管理',
+    'nav.my_stations': '物資站管理',
     'nav.me': '我的',
     'btn.signin': '登入',
     'btn.signout': '登出',
@@ -52,21 +52,21 @@ const translations: Record<Language, Record<string, string>> = {
     'sort.distance': '最近距離',
     'sort.status': '狀態優先',
     'common.loading': '載入中...',
-    'station.not_found': '找不到站點',
-    'station.delete_confirm': '確定要刪除此站點嗎？此操作無法復原。',
-    'station.delete_success': '站點已成功刪除。',
-    'station.delete_error': '刪除站點時發生錯誤。',
+    'station.not_found': '找不到物資站',
+    'station.delete_confirm': '確定要刪除此物資站嗎？此操作無法復原。',
+    'station.delete_success': '物資站已成功刪除。',
+    'station.delete_error': '刪除物資站時發生錯誤。',
     'station.delete_need_confirm': '確定要刪除此需求嗎？',
     'station.delete_need_success': '需求已成功刪除。',
     'station.delete_need_error': '刪除需求時發生錯誤。',
     'station.delete_offering_confirm': '確定要刪除此供應嗎？',
     'station.delete_offering_success': '供應已成功刪除。',
     'station.delete_offering_error': '刪除供應時發生錯誤。',
-    'station.managed_station_id': '管理站點 ID:',
-    'station.login_to_view': '請登入以查看您的站點',
-    'station.edit_station': '編輯站點',
+    'station.managed_station_id': '管理物資站 ID:',
+    'station.login_to_view': '請登入以查看您的物資站',
+    'station.edit_station': '編輯物資站',
     'btn.save': '儲存',
-    'station.name': '站點名稱',
+    'station.name': '物資站名稱',
     'station.address_location': '地址和位置',
     'station.use_current_location': '使用目前位置',
     'station.hide_map': '隱藏地圖',
@@ -77,9 +77,9 @@ const translations: Record<Language, Record<string, string>> = {
     'station.needs_label': '需求 (您需要什麼)',
     'station.add_needs': '新增需求',
     'btn.save_changes': '儲存變更',
-    'station.manage_desc': '管理您擁有或協調的站點',
-    'station.no_owned_stations': '您尚未擁有任何站點',
-    'station.create_station_prompt': '建立一個站點以在此處查看',
+    'station.manage_desc': '管理您擁有或協調的物資站',
+    'station.no_owned_stations': '您尚未擁有任何物資站',
+    'station.create_station_prompt': '建立一個物資站以在此處查看',
     
     // Links View
     'links.desc': '社區整理的資訊及群組',
@@ -137,24 +137,24 @@ const translations: Record<Language, Record<string, string>> = {
     'res.filter_baby': '嬰兒友善',
     'res.filter_wheelchair': '輪椅友善',
     'res.filter_charging': '充電服務',
-    'res.no_stations_map': '附近找不到相關站點',
-    'res.no_stations_list': '找不到符合條件的站點。',
+    'res.no_stations_map': '附近找不到相關物資站',
+    'res.no_stations_list': '找不到符合條件的物資站。',
     'res.my_location': '目前位置',
     'res.filter_title': '篩選需要的物資',
     'res.view_details': '查看詳情',
 
     // Volunteer Hub
     'vol.title': '義工/捐贈配對',
-    'vol.add_station': '新增站點',
+    'vol.add_station': '新增物資站',
     'vol.search_placeholder': '搜尋需求 (e.g. 水, 飯盒) 或地區...',
     'vol.urgent_only': '只顯示急需',
     'vol.search_results': '搜尋結果',
-    'vol.no_results': '暫無符合條件的站點',
+    'vol.no_results': '暫無符合條件的物資站',
     'vol.reset_filters': '重置所有篩選',
-    'vol.login_alert': '請先登入以新增站點。',
+    'vol.login_alert': '請先登入以新增物資站。',
     'vol.filter_mode': '篩選模式',
-    'vol.mode_needs': '站點缺少 (我去捐)',
-    'vol.mode_offerings': '站點提供 (我找物資)',
+    'vol.mode_needs': '物資站缺少 (我去捐)',
+    'vol.mode_offerings': '物資站提供 (我找物資)',
 
     // Logistics View
     'log.title': '物流 & 車手專區',
@@ -172,11 +172,11 @@ const translations: Record<Language, Record<string, string>> = {
     'task.posted': '發佈於',
 
     // Add Station Modal
-    'add.title': '新增站點',
-    'add.name': '站點名稱',
+    'add.title': '新增物資站',
+    'add.name': '物資站名稱',
     'add.address': '地址',
-    'add.lat': '緯度 (Latitude)',
-    'add.lng': '經度 (Longitude)',
+    'add.lat': '緯度',
+    'add.lng': '經度',
     'add.use_location': '使用目前位置',
     'add.location_error': '無法獲取位置',
     'add.location_required': '請輸入有效坐標或使用目前位置',
@@ -190,8 +190,8 @@ const translations: Record<Language, Record<string, string>> = {
     'add.photo': '相片',
     'add.opening_hours': '開放時間',
     'add.other_info': '其他資訊',
-    'add.success': '站點已成功新增！',
-    'add.error': '新增站點時發生錯誤。',
+    'add.success': '物資站已成功新增！',
+    'add.error': '新增物資站時發生錯誤。',
     'add.placeholder_name': 'e.g. 旺角臨時物資站',
     'add.placeholder_address': 'e.g. 西洋菜南街 22 號',
     'add.placeholder_contact': '可選',
@@ -208,9 +208,9 @@ const translations: Record<Language, Record<string, string>> = {
 
     // Me / Saved
     'me.title': '我的',
-    'me.saved_stations': '已收藏站點',
-    'me.my_stations': '我的站點',
-    'me.no_saved': '暫無收藏站點',
+    'me.saved_stations': '已收藏物資站',
+    'me.my_stations': '我的物資站',
+    'me.no_saved': '暫無收藏物資站',
     'me.login_desc': '登入以管理個人檔案及查看更多功能',
 
     // Manage Members Modal
@@ -223,8 +223,6 @@ const translations: Record<Language, Record<string, string>> = {
     // Auth & Others
     'auth.login_vote_alert': '請先登入以評分。',
     'badge.admin': 'ADMIN',
-    'footer.origin': 'Origin:',
-    'auth.dev_login': 'Dev Login',
 
     // Admin
     'admin.global_alert_broadcast': 'Global Alert Broadcast',
@@ -264,7 +262,7 @@ const translations: Record<Language, Record<string, string>> = {
   },
   en: {
     // Navigation & Common
-    'nav.resident': 'Resident',
+    'nav.resident': 'Stations',
     'nav.resources': 'Resources',
     'nav.volunteer': 'Volunteer',
     'nav.logistics': 'Driver/Logistics',
@@ -473,8 +471,6 @@ const translations: Record<Language, Record<string, string>> = {
     // Auth & Others
     'auth.login_vote_alert': 'Please login to vote.',
     'badge.admin': 'ADMIN',
-    'footer.origin': 'Origin:',
-    'auth.dev_login': 'Dev Login',
 
     // Admin
     'admin.global_alert_broadcast': 'Global Alert Broadcast',

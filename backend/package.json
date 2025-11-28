@@ -2,7 +2,7 @@
     "name": "taipowebapp-backend",
     "version": "1.0.0",
     "description": "Firebase backend for TaiPo Disaster Relief App",
-    "main": "lib/backend/src/index.js",
+    "main": "lib/index.js",
     "scripts": {
         "build": "tsc",
         "build:watch": "tsc --watch",

@@ -3,7 +3,7 @@ import { Router } from 'express';
 import { db } from '../index';
 import { authMiddleware, AuthenticatedRequest } from '../middleware/authMiddleware';
 import { roleMiddleware } from '../middleware/roleMiddleware';
-import { UserRole } from '../../types';
+import { UserRole } from '../types';
 
 const router = Router();
 
@@ -161,6 +161,20 @@ router.put('/:userId', authMiddleware, roleMiddleware([UserRole.ADMIN]), async (
         res.status(200).json({ message: 'User role updated successfully' });
     } catch (error) {
         res.status(500).json({ message: 'Error updating user role', error });
+    }
+});
+
+// Get all users
+router.get('/', authMiddleware, roleMiddleware([UserRole.ADMIN]), async (req, res) => {
+    try {
+        const snapshot = await db.collection('users').get();
+        const users = snapshot.docs.map(doc => ({
+            id: doc.id,
+            ...doc.data()
+        }));
+        return res.status(200).json(users);
+    } catch (error) {
+        return res.status(500).json({ message: 'Error fetching users', error });
     }
 });
 
