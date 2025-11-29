@@ -32,13 +32,6 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<'STATUS' | 'DISTANCE'>('STATUS');
   const [showTraffic, setShowTraffic] = useState(false);
-  
-  const [featureFilters, setFeatureFilters] = useState({
-    pets: false,
-    wheelchair: false,
-    baby: false,
-    charging: false
-  });
 
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapInstanceRef = useRef<any>(null);
@@ -88,7 +81,6 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
   const handleReset = () => {
     setSearchQuery('');
     setActiveType('ALL');
-    setFeatureFilters({ pets: false, wheelchair: false, baby: false, charging: false });
     setSelectedItems([]);
     setSortBy(userLocation ? 'DISTANCE' : 'STATUS');
   };
@@ -98,15 +90,9 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
       // Type Filter
       if (activeType !== 'ALL' && s.type !== activeType) return false;
       
-      // Feature Filters
-      if (featureFilters.pets && !s.features.hasPets) return false;
-      if (featureFilters.wheelchair && !s.features.isWheelchairAccessible) return false;
-      if (featureFilters.baby && !s.features.hasBabyCare) return false;
-      if (featureFilters.charging && !s.features.hasCharging) return false;
-
       // Item Filter (Strict AND logic - station must have at least ONE of the selected items)
       if (selectedItems.length > 0) {
-          const hasItem = selectedItems.some(item => s.offerings.includes(item));
+          const hasItem = selectedItems.some(item => s.offerings.some(o => o.item === item));
           if (!hasItem) return false;
       }
 
@@ -115,7 +101,7 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
           const q = searchQuery.toLowerCase();
           const matchesName = s.name.toLowerCase().includes(q);
           const matchesAddress = s.address.toLowerCase().includes(q);
-          const matchesOfferings = s.offerings.some(o => o.toLowerCase().includes(q));
+          const matchesOfferings = s.offerings.some(o => o.item.toLowerCase().includes(q));
           // Residents are looking for supplies, so we check offerings
           return matchesName || matchesAddress || matchesOfferings;
       }
@@ -133,7 +119,7 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
         if (b.status === SupplyStatus.AVAILABLE && a.status !== SupplyStatus.AVAILABLE) return 1;
         return 0;
     });
-  }, [stations, activeType, featureFilters, searchQuery, selectedItems, sortBy, userLocation]);
+  }, [stations, activeType, searchQuery, selectedItems, sortBy, userLocation]);
 
   // Leaflet Map Initialization and Update
   useEffect(() => {
@@ -227,7 +213,6 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
               
               if (s.status === SupplyStatus.AVAILABLE) { color = '#34A853'; statusText = t('status.available'); } 
               else if (s.status === SupplyStatus.LOW_STOCK) { color = '#FBBC04'; statusText = t('status.low_stock'); }
-              else if (s.status === SupplyStatus.EMPTY_CLOSED) { color = '#EA4335'; statusText = t('status.closed'); }
 
               // Use CircleMarker to ensure a pure vector circle (dot) without pin shape
               const marker = L.circleMarker([s.lat, s.lng], {
@@ -256,7 +241,7 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
                         <h3 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #202124;">${s.name}</h3>
                         <p style="margin: 0; font-size: 12px; color: #5F6368; line-height: 1.4;">${s.address}</p>
                         <div style="margin-top: 8px; font-size: 11px; color: #5F6368;">
-                            <strong>${t('card.offerings')}:</strong> ${s.offerings.join(', ') || t('card.no_info')}
+                            <strong>${t('card.offerings')}:</strong> ${ (s.offerings && s.offerings.length) ? s.offerings.map(o => o.item).join(', ') : t('card.no_info') }
                         </div>
                         <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee; text-align: center; color: #0F766E; font-weight: bold; font-size: 11px;">
                              ${t('res.view_details')} &rarr;
@@ -404,22 +389,6 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
 
          {filterOpen && (
              <div className="mt-2 bg-white p-3 rounded-lg border shadow-sm flex gap-3 flex-wrap animate-in slide-in-from-top-2">
-                 <label className="flex items-center space-x-2 text-sm text-gray-700">
-                     <input type="checkbox" checked={featureFilters.pets} onChange={() => setFeatureFilters({...featureFilters, pets: !featureFilters.pets})} className="rounded text-primary focus:ring-primary" />
-                     <span>{t('res.filter_pets')}</span>
-                 </label>
-                 <label className="flex items-center space-x-2 text-sm text-gray-700">
-                     <input type="checkbox" checked={featureFilters.baby} onChange={() => setFeatureFilters({...featureFilters, baby: !featureFilters.baby})} className="rounded text-primary focus:ring-primary" />
-                     <span>{t('res.filter_baby')}</span>
-                 </label>
-                 <label className="flex items-center space-x-2 text-sm text-gray-700">
-                     <input type="checkbox" checked={featureFilters.wheelchair} onChange={() => setFeatureFilters({...featureFilters, wheelchair: !featureFilters.wheelchair})} className="rounded text-primary focus:ring-primary" />
-                     <span>{t('res.filter_wheelchair')}</span>
-                 </label>
-                 <label className="flex items-center space-x-2 text-sm text-gray-700">
-                     <input type="checkbox" checked={featureFilters.charging} onChange={() => setFeatureFilters({...featureFilters, charging: !featureFilters.charging})} className="rounded text-primary focus:ring-primary" />
-                     <span>{t('res.filter_charging')}</span>
-                 </label>
              </div>
          )}
       </div>
@@ -479,7 +448,7 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
                                 station={s} 
                                 userLocation={userLocation} 
                                 onUpdate={refreshData}
-                                mode={mode as any} // Cast because StationCard mode is limited? No, I'll update StationCard
+                                mode={mode === 'VOLUNTEER' ? 'MANAGER' : mode as 'RESIDENT' | 'MANAGER' | 'ADMIN'}
                             />
                         ))}
                         {filteredStations.length === 0 && (

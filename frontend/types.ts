@@ -83,7 +83,8 @@ export interface UserProfile {
 
 export enum StationType {
     SUPPLY = 'SUPPLY',
-    REST = 'REST',
+    SHELTER = 'SHELTER',
+    CLOSED = 'CLOSED',
     PET_SHELTER = 'PET_SHELTER',
     FOOD_DISTRIBUTION = 'FOOD_DISTRIBUTION',
     MEDICAL = 'MEDICAL',
@@ -91,9 +92,12 @@ export enum StationType {
 }
 
 export enum SupplyStatus {
-    AVAILABLE = 'AVAILABLE', // Green
-    LOW_STOCK = 'LOW_STOCK', // Yellow
-    EMPTY_CLOSED = 'EMPTY_CLOSED' // Red
+    AVAILABLE = '✅',
+    LOW_STOCK = '⚠️',
+    URGENT = '‼️',
+    NO_DATA = '🤨',
+    GOV_CONTROL = '🙅🏻',
+    PAUSED = '暫停接收物資（現場提供）'
 }
 
 export enum CrowdStatus {
@@ -105,8 +109,13 @@ export enum CrowdStatus {
 
 export interface NeedItem {
     item: string;
+    status: SupplyStatus;
     quantity?: number;
-    unit?: string;
+}
+
+export interface Offering {
+    item: string;
+    status: SupplyStatus;
 }
 
 export interface StationVerification {
@@ -119,27 +128,23 @@ export interface StationVerification {
 export interface Station {
     id: string;
     name: string;
+    name_en?: string;
     address: string;
     lat: number;
     lng: number;
     type: StationType;
-    organizer: 'OFFICIAL' | 'NGO' | 'COMMUNITY';
+    organizer: 'GOV' | 'NGO' | 'COMMUNITY';
     status: SupplyStatus;
     crowdStatus?: CrowdStatus;
     needs: NeedItem[];
-    offerings: string[];
-    features: {
-        hasPets: boolean;
-        isWheelchairAccessible: boolean;
-        hasBabyCare: boolean;
-        hasCharging: boolean;
-    };
+    offerings: Offering[];
     lastUpdated: number; // Timestamp of content creation/edit
     lastVerified?: number; // Timestamp of last vote/verification
     upvotes: number;
     downvotes: number;
-    contactNumber: string;
+    contactNumber?: string;
     contactLink?: string; // Telegram, FB, IG link
+    mapLink?: string; // Prefer direct link to maps when available
     verification?: StationVerification;
     /** @deprecated Use `managers` instead */
     ownerId?: string;

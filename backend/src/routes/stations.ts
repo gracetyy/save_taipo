@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import * as admin from 'firebase-admin';
-import { Station, UserRole } from '../types';
+import { Station, UserRole, SupplyStatus } from '../types';
 import { authMiddleware } from '../middleware/authMiddleware';
 import { roleMiddleware } from '../middleware/roleMiddleware';
 
@@ -56,9 +56,16 @@ const transformStation = (doc: admin.firestore.DocumentSnapshot): Station => {
     }
   }
 
+  // Normalize offerings if stored as string[] (backwards compatibility)
+  let normalizedOfferings = data.offerings;
+  if (Array.isArray(data.offerings)) {
+    normalizedOfferings = data.offerings.map((o: any) => typeof o === 'string' ? { item: o, status: SupplyStatus.AVAILABLE } : o);
+  }
+
   return {
     id: doc.id,
     ...data,
+    offerings: normalizedOfferings,
     lat,
     lng,
   } as Station;
@@ -207,8 +214,10 @@ router.delete('/:id/offerings/:offering', authMiddleware, roleMiddleware([UserRo
     }
 
     const offeringToRemove = req.params.offering;
+    const stationData = doc.data() as Station;
+    const updatedOfferings = (stationData.offerings || []).filter((o: any) => (o && o.item ? o.item : o) !== offeringToRemove);
     await stationRef.update({
-      offerings: admin.firestore.FieldValue.arrayRemove(offeringToRemove)
+      offerings: updatedOfferings
     });
 
     // Also remove the item from the offering_categories collection

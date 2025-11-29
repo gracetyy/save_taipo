@@ -1,4 +1,5 @@
 import { apiClient } from '../services/apiClient';
+import { fetchSheetData } from './sheetService';
 import { 
     Station, 
     DeliveryTask, 
@@ -9,12 +10,59 @@ import {
     UserRole
 } from '../types';
 
+const deg2rad = (deg: number) => {
+    return deg * (Math.PI / 180);
+};
+
+// Cache for sheet data
+let cachedStations: Station[] | null = null;
+let lastFetchTime: number = 0;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+const STALE_THRESHOLD = 3 * 1000; // 3 seconds
+
 // Stations
 export const getStations = async (): Promise<Station[]> => {
-    return apiClient.get<Station[]>('/stations');
+    const now = Date.now();
+    if (cachedStations && (now - lastFetchTime) < CACHE_DURATION) {
+        return cachedStations;
+    }
+    if (cachedStations && (now - lastFetchTime) < STALE_THRESHOLD) {
+        // Return stale data while fetching new
+        fetchSheetData().then(data => {
+            cachedStations = data;
+            lastFetchTime = now;
+        }).catch(console.error);
+        return cachedStations;
+    }
+    try {
+        const data = await fetchSheetData();
+        cachedStations = data;
+        lastFetchTime = now;
+        return data;
+    } catch (error) {
+        console.error('Failed to fetch stations from sheet:', error);
+        if (cachedStations) return cachedStations;
+        return [];
+    }
 };
 
 export const getStation = async (id: string): Promise<Station> => {
+    // First try to find in cached stations from sheet
+    if (cachedStations) {
+        const station = cachedStations.find(s => s.id === id);
+        if (station) return station;
+    }
+    
+    // Fallback to fetching fresh data and finding the station
+    try {
+        const stations = await getStations();
+        const station = stations.find(s => s.id === id);
+        if (station) return station;
+    } catch (error) {
+        console.error('Failed to find station:', error);
+    }
+    
+    // Final fallback to API (for backward compatibility)
     return apiClient.get<Station>(`/stations/${id}`);
 };
 
@@ -207,8 +255,4 @@ export const calculateDistance = (lat1: number, lng1: number, lat2: number, lng2
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
     const d = R * c; // Distance in km
     return d;
-};
-
-const deg2rad = (deg: number) => {
-    return deg * (Math.PI / 180);
 };

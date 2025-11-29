@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Station, UserRole, SupplyStatus, CrowdStatus } from '../types';
+import { Station, UserRole, SupplyStatus, CrowdStatus, OFFERING_CATEGORIES } from '../types';
 import { toggleFavorite, isFavorite, voteStation } from '../services/dataService';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { MapPin, Navigation, ThumbsUp, ThumbsDown, Edit2, Heart, Users, ShieldCheck, Share2 } from 'lucide-react';
+import { MapPin, Navigation, ThumbsUp, ThumbsDown, Edit2, Heart, Users, ShieldCheck, Share2, Phone } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
-import { EditStationModal } from './EditStationModal'; // Fixed import
+import { EditStationModal } from './EditStationModal';
 
 interface StationCardProps {
     station: Station;
@@ -24,6 +24,8 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
     const [isFav, setIsFav] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [distance, setDistance] = useState<string | null>(null);
+    // Debug: log offerings length to verify they are present
+    // console.log('StationCard', station.id, 'offerings', station.offerings?.length);
 
     useEffect(() => {
         if (user) {
@@ -81,6 +83,25 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
 
     const canEdit = user && (user.role === UserRole.ADMIN || station.ownerId === user.id || station.managers?.includes(user.email));
 
+    const getStatusTranslationKey = (status: SupplyStatus) => {
+        switch (status) {
+            case SupplyStatus.AVAILABLE: return 'status.available';
+            case SupplyStatus.LOW_STOCK: return 'status.low_stock';
+            case SupplyStatus.URGENT: return 'status.urgent';
+            case SupplyStatus.NO_DATA: return 'status.no_data';
+            case SupplyStatus.GOV_CONTROL: return 'status.gov_control';
+            case SupplyStatus.PAUSED: return 'status.paused';
+            default: return 'status.available';
+        }
+    };
+
+    const normalizeOfferings = (offerings: any[]) => {
+        if (!offerings) return [] as any[];
+        return offerings.map(o => typeof o === 'string' ? { item: o, status: SupplyStatus.AVAILABLE } : o);
+    };
+
+    const normalizedOfferings = normalizeOfferings(station.offerings || []);
+
     return (
         <>
         <div 
@@ -90,16 +111,16 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
             <div className="flex justify-between items-start mb-2">
                 <div className="flex-1">
                     <h3 className="font-bold text-lg text-gray-900 line-clamp-1">{station.name}</h3>
-                    <div className="flex items-center text-gray-500 text-sm mt-0.5">
+                        <div className="flex items-center text-gray-500 text-sm mt-0.5">
                         <MapPin size={14} className="mr-1 shrink-0"/>
                         <span className="truncate">{station.address}</span>
                         {distance && <span className="ml-2 text-xs bg-gray-100 px-1.5 py-0.5 rounded text-gray-600">{distance} km</span>}
+                        </div>
                     {station.remarks && (
                         <div className="mt-1 text-gray-500 text-sm line-clamp-2">
                             {station.remarks}
                         </div>
                     )}
-                    </div>
                 </div>
                 <div className="flex flex-col items-end gap-1">
                      {station.verification?.isVerified && (
@@ -112,9 +133,12 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
                  <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
                         station.status === SupplyStatus.AVAILABLE ? 'bg-green-100 text-green-800 border-green-200' : 
                         station.status === SupplyStatus.LOW_STOCK ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 
-                        'bg-red-100 text-red-800 border-red-200'
+                        station.status === SupplyStatus.URGENT ? 'bg-red-100 text-red-800 border-red-200' :
+                        station.status === SupplyStatus.NO_DATA ? 'bg-gray-100 text-gray-800 border-gray-200' :
+                        station.status === SupplyStatus.GOV_CONTROL ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                        'bg-purple-100 text-purple-800 border-purple-200'
                   }`}>
-                      {t(`status.${station.status.toLowerCase()}` as any)}
+                      {t(getStatusTranslationKey(station.status))}
                   </span>
                   {station.crowdStatus && (
                        <span className={`px-2 py-0.5 rounded text-xs font-bold border flex items-center ${
@@ -126,6 +150,30 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
                        </span>
                   )}
             </div>
+            
+            {/* Offerings */}
+            {normalizedOfferings && normalizedOfferings.length > 0 && (
+                <div className="mb-3">
+                    <div className="flex flex-wrap gap-1">
+                        {normalizedOfferings.filter(o => o && o.item && o.status).map((offering, idx) => (
+                            mode === 'RESIDENT' ? (
+                                <span key={idx} className="px-2 py-0.5 rounded text-xs font-medium bg-gray-50 text-gray-800 border border-gray-100">
+                                    {offering.item}
+                                </span>
+                            ) : (
+                                <span key={idx} className={`px-2 py-0.5 rounded text-xs font-medium border ${
+                                    offering.status === SupplyStatus.AVAILABLE ? 'bg-green-50 text-green-800 border-green-100' : 
+                                    offering.status === SupplyStatus.LOW_STOCK ? 'bg-yellow-50 text-yellow-800 border-yellow-100' : 
+                                    offering.status === SupplyStatus.URGENT ? 'bg-red-50 text-red-800 border-red-100' :
+                                    'bg-gray-50 text-gray-800 border-gray-100'
+                                }`}>
+                                    {offering.item} {offering.status === SupplyStatus.AVAILABLE ? '✅' : offering.status === SupplyStatus.LOW_STOCK ? '⚠️' : offering.status === SupplyStatus.URGENT ? '‼️' : ''}
+                                </span>
+                            )
+                        ))}
+                    </div>
+                </div>
+            )}
             
             {/* Quick Actions Footer */}
             <div className="flex items-center justify-between pt-3 border-t border-gray-50 mt-2">
@@ -144,15 +192,27 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
                      </button>
                  </div>
 
-                 <div className="flex gap-2">
+                    <div className="flex gap-2">
                      <button 
                         onClick={handleFavorite}
                         className={`p-1.5 rounded-full hover:bg-gray-100 transition ${isFav ? 'text-red-500' : 'text-gray-400'}`}
                      >
                          <Heart size={16} className={isFav ? "fill-current" : ""}/>
                      </button>
-                     <a
-                        href={`https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lng}`}
+                            {station.contactNumber && station.contactNumber.trim() && (
+                                <a
+                                    href={`tel:${station.contactNumber.replace(/\s+/g, '')}`}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-green-500 transition"
+                                    aria-label={t('btn.call')}
+                                >
+                                    <Phone size={16}/>
+                                </a>
+                            )}
+                            <a
+                                href={station.mapLink || `https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lng}`}
                         target="_blank"
                         rel="noreferrer"
                         onClick={(e) => e.stopPropagation()}

@@ -5,13 +5,13 @@ declare const L: any;
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { getStation, verifyStation, getUserVote, isFavorite, toggleFavorite, deleteOffering, deleteNeed, addOfferingCategory, addOfferingItem, updateStationDetails } from '../services/dataService';
-import { Station, UserRole, SupplyStatus, CrowdStatus } from '../types';
+import { Station, UserRole, SupplyStatus, CrowdStatus, OFFERING_CATEGORIES } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { MapPin, ArrowLeft, Heart, ThumbsUp, ThumbsDown, ShieldCheck, Clock, Users, Navigation, Share2, Plus, Edit2, CheckCircle, AlertTriangle } from 'lucide-react';
+import { MapPin, ArrowLeft, Heart, ThumbsUp, ThumbsDown, ShieldCheck, Clock, Users, Navigation, Share2, Plus, Edit2, CheckCircle, AlertTriangle, Phone } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 import { CategorySelector } from '../components/CategorySelector';
-import { EditStationModal } from '../components/EditStationModal'; // Assuming this component exists or will be created
+import { EditStationModal } from '../components/EditStationModal';
 
 interface Props {
   userLocation: { lat: number; lng: number } | null;
@@ -86,7 +86,11 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
         className: 'custom-div-icon',
         html: `<div style="background-color: ${
             station.status === SupplyStatus.AVAILABLE ? '#10B981' : 
-            station.status === SupplyStatus.LOW_STOCK ? '#F59E0B' : '#EF4444'
+            station.status === SupplyStatus.LOW_STOCK ? '#F59E0B' : 
+            station.status === SupplyStatus.URGENT ? '#EF4444' :
+            station.status === SupplyStatus.NO_DATA ? '#6B7280' :
+            station.status === SupplyStatus.GOV_CONTROL ? '#3B82F6' :
+            '#8B5CF6'
         }; width: 16px; height: 16px; border-radius: 50%; border: 3px solid white; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></div>`,
         iconSize: [16, 16],
         iconAnchor: [8, 8]
@@ -130,11 +134,31 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
       if (id) loadStation(id);
   }
 
+  const getStatusTranslationKey = (status: SupplyStatus) => {
+      switch (status) {
+          case SupplyStatus.AVAILABLE: return 'status.available';
+          case SupplyStatus.LOW_STOCK: return 'status.low_stock';
+          case SupplyStatus.URGENT: return 'status.urgent';
+          case SupplyStatus.NO_DATA: return 'status.no_data';
+          case SupplyStatus.GOV_CONTROL: return 'status.gov_control';
+          case SupplyStatus.PAUSED: return 'status.paused';
+          default: return 'status.available';
+      }
+  };
+
   if (isLoading) return <div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>;
   if (!station) return <div className="p-8 text-center text-gray-500">Station not found</div>;
 
   const isOwner = user && (station.ownerId === user.id || station.managers?.includes(user.email));
   const canEdit = user && (user.role === UserRole.ADMIN || isOwner);
+
+    const manpowerItems = OFFERING_CATEGORIES['cat.manpower'] || [];
+    const normalizeOfferings = (offerings: any[]) => {
+        if (!offerings) return [] as any[];
+        return offerings.map(o => typeof o === 'string' ? { item: o, status: SupplyStatus.AVAILABLE } : o);
+    };
+    const normalizedOfferings = normalizeOfferings(station.offerings as any[]);
+    const filteredOfferings = user?.role === 'RESIDENT' ? normalizedOfferings?.filter(offering => !manpowerItems.includes(offering.item)) : normalizedOfferings;
 
   return (
     <div className="bg-white min-h-screen pb-20 relative">
@@ -186,9 +210,12 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
                   <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
                         station.status === SupplyStatus.AVAILABLE ? 'bg-green-100 text-green-800 border-green-200' : 
                         station.status === SupplyStatus.LOW_STOCK ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 
-                        'bg-red-100 text-red-800 border-red-200'
+                        station.status === SupplyStatus.URGENT ? 'bg-red-100 text-red-800 border-red-200' :
+                        station.status === SupplyStatus.NO_DATA ? 'bg-gray-100 text-gray-800 border-gray-200' :
+                        station.status === SupplyStatus.GOV_CONTROL ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                        'bg-purple-100 text-purple-800 border-purple-200'
                   }`}>
-                      {t(`status.${station.status.toLowerCase()}` as any)}
+                      {t(getStatusTranslationKey(station.status))}
                   </span>
                   {station.crowdStatus && (
                        <span className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center ${
@@ -203,16 +230,27 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
           </div>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-2 gap-4 mb-8">
-              <a 
-                href={`https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lng}`}
+                    <div className="grid grid-cols-2 gap-4 mb-8">
+                            <div className="flex gap-2">
+                                <a 
+                                    href={station.mapLink || `https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lng}`}
                 target="_blank"
                 rel="noreferrer"
                 className="flex items-center justify-center bg-primary text-white py-3 rounded-xl font-bold shadow-lg shadow-teal-100 hover:bg-teal-700 transition"
               >
                   <Navigation size={18} className="mr-2"/> {t('btn.directions')}
               </a>
-              <div className="flex bg-gray-100 rounded-xl p-1">
+                                {station.contactNumber && station.contactNumber.trim() && (
+                                        <a
+                                                href={`tel:${station.contactNumber.replace(/\s+/g, '')}`}
+                                                    className="flex items-center justify-center bg-white border border-gray-200 text-gray-700 py-3 px-4 rounded-xl font-bold hover:bg-gray-50"
+                                                    aria-label={t('btn.call')}
+                                        >
+                                                    <Phone size={18} className="mr-2"/> {t('btn.call')}
+                                        </a>
+                                )}
+                            </div>
+                            <div className="flex bg-gray-100 rounded-xl p-1">
                   <button 
                     onClick={() => handleVote('UP')}
                     className={`flex-1 flex items-center justify-center rounded-lg transition ${userVote === 'UP' ? 'bg-white shadow text-green-600' : 'text-gray-500'}`}
@@ -238,8 +276,7 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
                   <div className="grid grid-cols-1 gap-2">
                       {station.needs.map((need, idx) => (
                           <div key={idx} className="flex justify-between items-center p-3 bg-red-50 rounded-xl border border-red-100">
-                              <span className="font-medium text-gray-800">{need.item}</span>
-                              {need.quantity && <span className="text-sm font-bold text-red-600 bg-white px-2 py-1 rounded border border-red-200">x{need.quantity}</span>}
+                              <span className="font-medium text-gray-800">{need.item} - {t(getStatusTranslationKey(need.status))}</span>
                           </div>
                       ))}
                   </div>
@@ -252,11 +289,15 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
                   <CheckCircle size={18} className="mr-2 text-green-500"/>
                   {t('station.offerings_label')}
                </h3>
-               {station.offerings && station.offerings.length > 0 ? (
+               {filteredOfferings && filteredOfferings.length > 0 ? (
                    <div className="flex flex-wrap gap-2">
-                       {station.offerings.map((item, idx) => (
-                           <span key={idx} className="px-3 py-1.5 bg-green-50 text-green-800 rounded-lg text-sm font-medium border border-green-100">
-                               {item}
+                       {filteredOfferings.map((offering, idx) => (
+                           <span key={idx} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${
+                               offering.status === SupplyStatus.AVAILABLE ? 'bg-green-50 text-green-800 border-green-100' :
+                               offering.status === SupplyStatus.LOW_STOCK ? 'bg-yellow-50 text-yellow-800 border-yellow-100' :
+                               'bg-gray-50 text-gray-800 border-gray-100'
+                           }`}>
+                               {offering.item} {offering.status === SupplyStatus.AVAILABLE ? '✅' : offering.status === SupplyStatus.LOW_STOCK ? '⚠️' : offering.status === SupplyStatus.URGENT ? '‼️' : ''} - {t(getStatusTranslationKey(offering.status))}
                            </span>
                        ))}
                    </div>
@@ -266,7 +307,7 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
           </div>
           
           {/* Remarks */}
-          {station.remarks && (
+          {station.remarks && user?.role !== 'RESIDENT' && (
               <div className="mb-8">
                   <h3 className="font-bold text-gray-900 mb-3">Remarks</h3>
                   <div className="text-gray-700 text-sm whitespace-pre-wrap">{station.remarks}</div>

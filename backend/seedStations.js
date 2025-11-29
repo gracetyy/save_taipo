@@ -1,0 +1,597 @@
+const admin = require('firebase-admin');
+
+const serviceAccount = require('./serviceAccountKey.json');
+
+admin.initializeApp({ credential: admin.credential.cert(serviceAccount) });
+
+const db = admin.firestore();
+
+async function seedDatabase() {
+  console.log('Seeding canonical stations...');
+  const batch = db.batch();
+  const stationsData = [
+  {
+    "id": "s01",
+    "name": "彩虹串燒",
+    "address": "大埔運頭街20號廣安大廈地下D號舖",
+    "location": {
+      "lat": 22.4471017,
+      "lng": 114.1684629
+    },
+    "type": "SUPPLY",
+    "status": "NO_DATA",
+    "organizer": "COMMUNITY",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "63600900",
+    "mapLink": "https://www.google.com/maps/place/彩虹串燒專門店+(大埔店)/@22.4471017,114.1684629,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x340408409bedfda9:0x6f8c8a345960513e!8m2!3d22.4471017!4d114.1684629!16s%2Fg%2F1vntghvp?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s02",
+    "name": "大埔藝術中心",
+    "address": "大埔安邦路12號",
+    "location": {
+      "lat": 22.4514912,
+      "lng": 114.1685984
+    },
+    "type": "SHELTER",
+    "status": "NO_DATA",
+    "organizer": "GOV",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "3468 3400",
+    "mapLink": "https://www.google.com/maps/place/大埔藝術中心/@22.4514912,114.1685984,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x34040968957ebd07:0xaabf63c36b4914ae!8m2!3d22.4514912!4d114.1685984!16s%2Fg%2F11h03g85cd?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s03",
+    "name": "大埔文娛中心",
+    "address": "大埔安邦路12號 (Room 207)",
+    "location": {
+      "lat": 22.4517131,
+      "lng": 114.1680912
+    },
+    "type": "SUPPLY",
+    "status": "NO_DATA",
+    "organizer": "GOV",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "26654477",
+    "mapLink": "https://www.google.com/maps/place/大埔文娛中心/@22.4517131,114.1680912,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x340408477878f9a1:0xb2b248c30b287a83!8m2!3d22.4517131!4d114.1680912!16s%2Fg%2F11h6ydf0h4?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s04",
+    "name": "風火堂",
+    "address": "大埔仁興街19號風火堂（火車博物館傍）",
+    "location": {
+      "lat": 22.449423,
+      "lng": 114.164451
+    },
+    "type": "SUPPLY",
+    "status": "NO_DATA",
+    "organizer": "COMMUNITY",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "94893963",
+    "mapLink": "https://www.google.com/maps/place/大埔風火堂濟公廟/@22.449423,114.164451,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x3404093ca934a66f:0x3bedfd3db10cf2eb!8m2!3d22.449423!4d114.164451!16s%2Fg%2F11y1lzp_pc?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s05",
+    "name": "東昌街體育館",
+    "address": "大埔東昌街25號大埔東昌街康體大樓3樓",
+    "location": {
+      "lat": 22.4496536,
+      "lng": 114.1706471
+    },
+    "type": "SHELTER",
+    "status": "NO_DATA",
+    "organizer": "GOV",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "2691 2055",
+    "mapLink": "https://www.google.com/maps/place/東昌街體育館/@22.4496536,114.1706471,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x340409679d314d83:0xcef08284ce044ac4!8m2!3d22.4496536!4d114.1706471!16s%2Fg%2F11k4gx47dc?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s06",
+    "name": "富善邨 社區會堂",
+    "address": "大埔安埔路12號",
+    "location": {
+      "lat": 22.4546661,
+      "lng": 114.1763883
+    },
+    "type": "SHELTER",
+    "status": "NO_DATA",
+    "organizer": "GOV",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "25431518",
+    "mapLink": "https://www.google.com/maps/place/富善邨社區會堂/@22.4546661,114.1763883,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x3404084f0bc6001d:0xa06fd5188c884407!8m2!3d22.4546661!4d114.1763883!16s%2Fg%2F12hqnk_v1?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0,
+    "remarks": "已滿 (No vacancy)"
+  },
+  {
+    "id": "s07",
+    "name": "策誠軒",
+    "address": "大埔滘大埔公路大埔滘段4105號",
+    "location": {
+      "lat": 22.4408128,
+      "lng": 114.1829506
+    },
+    "type": "SHELTER",
+    "status": "NO_DATA",
+    "organizer": "COMMUNITY",
+    "offerings": [],
+    "needs": [],
+    "mapLink": "https://www.google.com/maps/place/香港大埔滘大埔公路大埔滘段4105號策誠軒I座/@22.4408128,114.1829506,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x3404085d8754d845:0xae6eab62cc88fd04!8m2!3d22.4408128!4d114.1829506!16s%2Fg%2F12jsg2r3x?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s08",
+    "name": "廣福商場 平台",
+    "address": "大埔廣福商場",
+    "location": {
+      "lat": 22.4488288,
+      "lng": 114.1741672
+    },
+    "type": "CLOSED",
+    "status": "NO_DATA",
+    "organizer": "COMMUNITY",
+    "offerings": [],
+    "needs": [],
+    "mapLink": "https://www.google.com/maps/place/廣福商場/@22.4488288,114.1741672,21z/data=!3m1!5s0x3404084410432f53:0x4e8538edc83cbe87!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x340408441b3d9509:0xaf89627e34f9fecb!8m2!3d22.4488288!4d114.1741672!16s%2Fg%2F1yw0_pxtp?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s09",
+    "name": "廣福社區會堂",
+    "address": "大埔廣宏街廣福邨",
+    "location": {
+      "lat": 22.4473557,
+      "lng": 114.1742658
+    },
+    "type": "CLOSED",
+    "status": "NO_DATA",
+    "organizer": "GOV",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "2657 2948",
+    "mapLink": "https://www.google.com/maps/place/廣福社區會堂/@22.4473557,114.1742658,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x34040843fa3007d1:0x80e20fea667d3b72!8m2!3d22.4473557!4d114.1742658!16s%2Fg%2F11b67tcks6?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s10",
+    "name": "大埔社區中心",
+    "address": "大埔鄉事會街2號 (新街市旁)",
+    "location": {
+      "lat": 22.4467626,
+      "lng": 114.1659817
+    },
+    "type": "SHELTER",
+    "status": "NO_DATA",
+    "organizer": "GOV",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "2653 4220",
+    "mapLink": "https://www.google.com/maps/place/香港大埔鄉事會街2號大埔社區中心/@22.4467626,114.1659817,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x3404083f0c4f1331:0x64c2ead6b58369fe!8m2!3d22.4467626!4d114.1659817!16s%2Fg%2F12hrm8p4n?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s11",
+    "name": "馮梁結紀念中學",
+    "address": "大埔寶湖道22號",
+    "location": {
+      "lat": 22.4479178,
+      "lng": 114.1731049
+    },
+    "type": "SHELTER",
+    "status": "NO_DATA",
+    "organizer": "GOV",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "2651 6033",
+    "mapLink": "https://www.google.com/maps/place/中華基督教會馮梁結紀念中學/@22.4479178,114.1731049,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x34040846acd8c40f:0x6a959383611e62e2!8m2!3d22.4479178!4d114.1731049!16s%2Fg%2F1vljcyvz?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s12",
+    "name": "那打素醫院",
+    "address": "大埔那打素醫院",
+    "location": {
+      "lat": 22.4586917,
+      "lng": 114.1747667
+    },
+    "type": "CLOSED",
+    "status": "NO_DATA",
+    "organizer": "GOV",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "26892000",
+    "mapLink": "https://www.google.com/maps/place/雅麗氏何妙齡那打素醫院/@22.4586917,114.1747667,21z/data=!3m1!5s0x3404084ea3c0cde5:0x9cac528990faca8!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x3404084e98b0074d:0xc15bfe87af267518!8m2!3d22.4586917!4d114.1747667!16zL20vMGdfbGpo?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s13",
+    "name": "大埔墟街市",
+    "address": "大埔鄉事會街大埔綜合大樓",
+    "location": {
+      "lat": 22.4463116,
+      "lng": 114.1660176
+    },
+    "type": "COLLECTION_POINT",
+    "status": "NO_DATA",
+    "organizer": "COMMUNITY",
+    "offerings": [],
+    "needs": [],
+    "mapLink": "https://www.google.com/maps/place/大埔墟街市/@22.4463116,114.1660176,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x3404083f76b55567:0xad8e0d61ac4e7673!8m2!3d22.4463116!4d114.1660176!16s%2Fg%2F1tcx4mg7?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s14",
+    "name": "大埔消防局",
+    "address": "3 Ting Kok Rd, Ting Kok, 香港",
+    "location": {
+      "lat": 22.4513491,
+      "lng": 114.1646322
+    },
+    "type": "SHELTER",
+    "status": "NO_DATA",
+    "organizer": "GOV",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "26512951",
+    "mapLink": "https://www.google.com/maps/place/大埔消防局/@22.4513491,114.1646322,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x340408391cdc3641:0x7597907edfe59d42!8m2!3d22.4513491!4d114.1646322!16s%2Fg%2F1vxfxsbj?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s15",
+    "name": "運頭塘社區中心",
+    "address": "香港Wan Tau Tong曉運路10號運頭塘鄰里社區中心",
+    "location": {
+      "lat": 22.442118,
+      "lng": 114.166074
+    },
+    "type": "SHELTER",
+    "status": "NO_DATA",
+    "organizer": "NGO",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "26565325",
+    "mapLink": "https://www.google.com/maps/place/運頭塘鄰里社區中心/@22.442118,114.166074,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x340408156ad0e95d:0xb18b781dae08507a!8m2!3d22.442118!4d114.166074!16s%2Fg%2F12j86mfzf?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s16",
+    "name": "逸東餃子",
+    "address": "大埔東昌街6-16號東昌閣地下E舖",
+    "location": {
+      "lat": 22.4480091,
+      "lng": 114.1695399
+    },
+    "type": "SUPPLY",
+    "status": "NO_DATA",
+    "organizer": "COMMUNITY",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "26572656",
+    "mapLink": "https://www.google.com/maps/place/逸東餃子/@22.4480091,114.1695399,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x340409b36031a5f3:0x9d475a089ef914b1!8m2!3d22.4480091!4d114.1695399!16s%2Fg%2F11rbnkzkrp?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s17",
+    "name": "大元邨 銘恩小學",
+    "address": "大埔大元邨",
+    "location": {
+      "lat": 22.4553157,
+      "lng": 114.171387
+    },
+    "type": "SHELTER",
+    "status": "NO_DATA",
+    "organizer": "GOV",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "26686112",
+    "mapLink": "https://www.google.com/maps/place/新界婦孺福利會基督教銘恩小學/@22.4553157,114.171387,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x3404097f12c2c8f3:0x9c70aaac2a4bf6a0!8m2!3d22.4553157!4d114.171387!16s%2Fg%2F11fkqbx321?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s18",
+    "name": "元洲仔公園",
+    "address": "大埔大埔公路元洲仔段",
+    "location": {
+      "lat": 22.4469444,
+      "lng": 114.1775
+    },
+    "type": "SHELTER",
+    "status": "NO_DATA",
+    "organizer": "COMMUNITY",
+    "offerings": [],
+    "needs": [],
+    "mapLink": "https://www.google.com/maps/place/元洲仔公園/@22.4469444,114.1775,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x340408449d9c0dbb:0xd726e1a3e8a35fa6!8m2!3d22.4469444!4d114.1775!16s%2Fg%2F11x9812wp?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s19",
+    "name": "新達廣場",
+    "address": "大埔南運路9號新達廣場1樓038至040號",
+    "location": {
+      "lat": 22.443554,
+      "lng": 114.169348
+    },
+    "type": "SUPPLY",
+    "status": "NO_DATA",
+    "organizer": "COMMUNITY",
+    "offerings": [],
+    "needs": [],
+    "mapLink": "https://www.google.com/maps/place/新達廣場/@22.443554,114.169348,21z/data=!3m1!5s0x3404084092b33051:0xc87f0b8686690a9b!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x340408401113eab5:0x6f6c797a425fb6b0!8m2!3d22.443554!4d114.169348!16s%2Fg%2F155pjmf4?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s20",
+    "name": "香港中華基督教青年會小西灣會所",
+    "address": "小西灣小西灣道9號",
+    "location": {
+      "lat": 22.265095,
+      "lng": 114.248152
+    },
+    "type": "SHELTER",
+    "status": "NO_DATA",
+    "organizer": "NGO",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "28960308",
+    "mapLink": "https://www.google.com/maps/place/香港中華基督教青年會小西灣會所/@22.265095,114.248152,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x3404022e4c4f5ad3:0xd3d2fe8d5ed31d80!8m2!3d22.265095!4d114.248152!16s%2Fg%2F12hlt4f3r?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s21",
+    "name": "大埔墟收集站B出口",
+    "address": "大埔墟收集站B出口",
+    "location": {
+      "lat": 22.444249,
+      "lng": 114.17039
+    },
+    "type": "COLLECTION_POINT",
+    "status": "NO_DATA",
+    "organizer": "COMMUNITY",
+    "offerings": [],
+    "needs": [],
+    "mapLink": "https://www.google.com/maps/place/大埔墟站+WiFi熱點/@22.444249,114.17039,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x340408404a13e8fb:0x5a0b62042be8f5e!8m2!3d22.444249!4d114.17039!16s%2Fg%2F11k3myz014?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s22",
+    "name": "銘恩中心",
+    "address": "10 Ting Kok Rd, 基督教銘恩堂大埔堂 銘恩中心",
+    "location": {
+      "lat": 22.4549648,
+      "lng": 114.1700353
+    },
+    "type": "SHELTER",
+    "status": "NO_DATA",
+    "organizer": "NGO",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "26616246",
+    "mapLink": "https://www.google.com/maps/place/基督教銘恩堂大埔堂+銘恩中心/@22.4549648,114.1700353,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x340408486582d4b9:0xc18666927cc5c7d9!8m2!3d22.4549648!4d114.1700353!16s%2Fg%2F1tgft6zd?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s23",
+    "name": "善導會 善樓",
+    "address": "大埔船灣陳屋168號善樓",
+    "location": {
+      "lat": 22.4617362,
+      "lng": 114.2063601
+    },
+    "type": "SHELTER",
+    "status": "NO_DATA",
+    "organizer": "NGO",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "4645 2763",
+    "mapLink": "https://www.google.com/maps/place/過渡性房屋+-+善導會善樓/@22.4617362,114.2063601,21z/data=!4m10!1m2!2m1!1z5ZaE5bCO5pyDIOWWhOaokw!3m6!1s0x340409000cb955b9:0xb4e225bc16715e12!8m2!3d22.4617362!4d114.2063601!15sChDlloTlsI7mnIMg5ZaE5qiTWhQiEuWWhOWwjiDmnIMg5ZaEIOaok5IBE2NvbmRvbWluaXVtX2NvbXBsZXiaASRDaGREU1VoTk1HOW5TMFZKUTBGblNVTmZibkIxVXpOUlJSQULgAQD6AQQIABAj!16s%2Fg%2F11w4b954h6?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s24",
+    "name": "廣福中石化油站",
+    "address": "大埔廣福中石化油站",
+    "location": {
+      "lat": 22.4511933,
+      "lng": 114.1636492
+    },
+    "type": "COLLECTION_POINT",
+    "status": "NO_DATA",
+    "organizer": "COMMUNITY",
+    "offerings": [],
+    "needs": [],
+    "mapLink": "https://www.google.com/maps/place/中國石油+大埔油站/@22.4511933,114.1636492,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x34040838d6b0872d:0x600ee186cbcc4243!8m2!3d22.4511933!4d114.1636492!16s%2Fg%2F11p18b1sky?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s25",
+    "name": "中大",
+    "address": "香港中文大學",
+    "location": {
+      "lat": 22.4134548,
+      "lng": 114.2102967
+    },
+    "type": "COLLECTION_POINT",
+    "status": "NO_DATA",
+    "organizer": "COMMUNITY",
+    "offerings": [],
+    "needs": [],
+    "mapLink": "https://www.google.com/maps/place/香港馬料水大學站/@22.4134548,114.2102967,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x34040620ba9540a3:0xc11fcdf666d6e32!8m2!3d22.4134548!4d114.2102967!16zL20vMDNrcWZq?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s26",
+    "name": "廣福巴士站",
+    "address": "大埔公路元洲仔段巴士站迴旋處附近",
+    "location": {
+      "lat": 22.44652,
+      "lng": 114.17358
+    },
+    "type": "COLLECTION_POINT",
+    "status": "NO_DATA",
+    "organizer": "COMMUNITY",
+    "offerings": [],
+    "needs": [],
+    "mapLink": "https://www.google.com/maps/place/大埔公路;+廣福邨外迴旋處巴士站/@22.44652,114.17358,21z/data=!3m1!4b1!4m6!3m5!1s0x340408415fe88847:0x649e10b933bd1bc7!8m2!3d22.44652!4d114.17358!16s%2Fg%2F11vjnt_th6?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s27",
+    "name": "烏溪沙",
+    "address": "烏溪沙MTR",
+    "location": {
+      "lat": 22.42914,
+      "lng": 114.24384
+    },
+    "type": "SUPPLY",
+    "status": "NO_DATA",
+    "organizer": "COMMUNITY",
+    "offerings": [],
+    "needs": [],
+    "mapLink": "https://www.google.com/maps/place/烏溪沙站/@22.42914,114.24384,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x34040f4a398d17c5:0xe5a83af63b5d840f!8m2!3d22.42914!4d114.24384!16zL20vMDUzaDUx?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s28",
+    "name": "大埔A1 出口",
+    "address": "大埔A1出口",
+    "location": {
+      "lat": 22.444249,
+      "lng": 114.17039
+    },
+    "type": "COLLECTION_POINT",
+    "status": "NO_DATA",
+    "organizer": "COMMUNITY",
+    "offerings": [],
+    "needs": [],
+    "mapLink": "https://www.google.com/maps/place/大埔墟站+WiFi熱點/@22.444249,114.17039,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x340408404a13e8fb:0x5a0b62042be8f5e!8m2!3d22.444249!4d114.17039!16s%2Fg%2F11k3myz014?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s29",
+    "name": "廣福球場巴士站",
+    "address": "大埔廣福球場巴士站",
+    "location": {
+      "lat": 22.4476651,
+      "lng": 114.1712867
+    },
+    "type": "COLLECTION_POINT",
+    "status": "NO_DATA",
+    "organizer": "COMMUNITY",
+    "offerings": [],
+    "needs": [],
+    "mapLink": "https://www.google.com/maps/place/廣福球場/@22.4476651,114.1712867,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x340408412e3195ef:0x242aa32c623a9183!8m2!3d22.4476651!4d114.1712867!16s%2Fg%2F1td6vqs4?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s30",
+    "name": "東昌街社區會堂",
+    "address": "大埔東昌街25號 康體大樓1樓",
+    "location": {
+      "lat": 22.4498504,
+      "lng": 114.1701499
+    },
+    "type": "SHELTER",
+    "status": "NO_DATA",
+    "organizer": "GOV",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "2253 1637",
+    "mapLink": "https://www.google.com/maps/place/東昌街社區會堂/@22.4498504,114.1701499,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x3404090e33f3ef23:0x21fedcefe8c93494!8m2!3d22.4498504!4d114.1701499!16s%2Fg%2F11rtvlpn4x?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  },
+  {
+    "id": "s31",
+    "name": "匡智會",
+    "address": "大埔匡智之家",
+    "location": {
+      "lat": 22.463048,
+      "lng": 114.1738494
+    },
+    "type": "SHELTER",
+    "status": "NO_DATA",
+    "organizer": "NGO",
+    "offerings": [],
+    "needs": [],
+    "contactNumber": "26666664",
+    "mapLink": "https://www.google.com/maps/place/匡智之家/@22.463048,114.1738494,21z/data=!4m10!1m3!11m2!2s1kXc_4cjSSeveClI9iUsHw!3e3!3m5!1s0x3404084ca1a27789:0x88f4a53a7b95be55!8m2!3d22.463048!4d114.1738494!16s%2Fg%2F11g121wlgc?hl=zh-TW&entry=ttu&g_ep=EgoyMDI1MTEyMy4xIKXMDSoASAFQAw%3D%3D",
+    "lastUpdated": 1764437045762,
+    "upvotes": 0,
+    "downvotes": 0
+  }
+];
+  stationsData.forEach(station => { const ref = db.collection('stations').doc(station.id); batch.set(ref, station); });
+  await batch.commit();
+  console.log('Done.');
+}
+
+seedDatabase().catch(console.error);

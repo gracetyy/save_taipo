@@ -20,7 +20,8 @@ interface Props {
 
 const TYPE_KEYS: Record<string, string> = {
     'SUPPLY': 'type.supply',
-    'REST': 'type.rest',
+  'SHELTER': 'type.shelter',
+  'CLOSED': 'type.closed',
     'PET_SHELTER': 'type.pet_shelter',
     'FOOD_DISTRIBUTION': 'type.food_distribution',
     'MEDICAL': 'type.medical',
@@ -206,7 +207,7 @@ export const AddStationModal: React.FC<Props> = ({ isOpen, onClose, onStationAdd
       if (existing) {
         return prev.filter(n => n.item !== item);
       }
-      return [...prev, { item, quantity: undefined }];
+      return [...prev, { item, status: SupplyStatus.URGENT, quantity: undefined }];
     });
   };
 
@@ -264,13 +265,12 @@ export const AddStationModal: React.FC<Props> = ({ isOpen, onClose, onStationAdd
       status,
       crowdStatus,
       needs,
-      offerings,
-      features: { hasPets: false, isWheelchairAccessible: false, hasBabyCare: false, hasCharging: false },
+      offerings: offerings.map(item => ({ item, status: SupplyStatus.AVAILABLE })),
       lastUpdated: Date.now(),
       upvotes: 0,
       downvotes: 0,
-      contactNumber: contact,
-      contactLink,
+      ...(contact && contact.trim() ? { contactNumber: contact.trim() } : {}),
+      ...(contactLink && contactLink.trim() ? { contactLink: contactLink.trim() } : {}),
       verification: sourceUrl ? {
         isVerified: false,
         verifiedBy: 'COMMUNITY',
@@ -290,7 +290,10 @@ export const AddStationModal: React.FC<Props> = ({ isOpen, onClose, onStationAdd
     switch (s) {
       case SupplyStatus.AVAILABLE: return 'status.available';
       case SupplyStatus.LOW_STOCK: return 'status.low_stock';
-      case SupplyStatus.EMPTY_CLOSED: return 'status.closed';
+      case SupplyStatus.URGENT: return 'status.urgent';
+      case SupplyStatus.NO_DATA: return 'status.no_data';
+      case SupplyStatus.GOV_CONTROL: return 'status.gov_control';
+      case SupplyStatus.PAUSED: return 'status.paused';
       default: return 'status.available';
     }
   };
@@ -395,7 +398,7 @@ export const AddStationModal: React.FC<Props> = ({ isOpen, onClose, onStationAdd
           <div>
             <label className="text-gray-500 text-xs font-bold uppercase">Status</label>
             <div className="flex gap-2 mt-1">
-              {[SupplyStatus.AVAILABLE, SupplyStatus.LOW_STOCK, SupplyStatus.EMPTY_CLOSED].map(s => (
+              {[SupplyStatus.AVAILABLE, SupplyStatus.LOW_STOCK, SupplyStatus.URGENT, SupplyStatus.NO_DATA, SupplyStatus.GOV_CONTROL, SupplyStatus.PAUSED].map(s => (
                 <button 
                   key={s}
                   type="button"
@@ -497,7 +500,7 @@ export const AddStationModal: React.FC<Props> = ({ isOpen, onClose, onStationAdd
                   itemsFilter={(item) => !needs.find(n => n.item === item)}
                   allowAddItem={true}
                   allowAddCategory={true}
-                  onAddItem={(_cat, item) => { addOfferingItem(_cat, item); setNeeds(prev => [...prev, { item, quantity: undefined }]); }}
+                  onAddItem={(_cat, item) => { addOfferingItem(_cat, item); setNeeds(prev => [...prev, { item, status: SupplyStatus.URGENT, quantity: undefined }]); }}
                   onAddCategory={(cat) => addOfferingCategory(cat)}
                 />
               </div>

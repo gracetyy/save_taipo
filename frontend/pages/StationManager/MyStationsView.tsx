@@ -70,7 +70,7 @@ export const MyStationsView: React.FC<Props> = ({ userLocation: _userLocation })
     setEditLng(station.lng);
     setEditStatus(station.status);
     setEditNeeds(station.needs ? [...station.needs] : []);
-    setEditOfferings(station.offerings ? [...station.offerings] : []);
+    setEditOfferings(station.offerings ? station.offerings.map(o => o.item) : []);
     setShowMapPicker(false);
     setShowNeedsSelector(false);
     // Reset CategorySelector internal state (no need to clear parent state)
@@ -93,7 +93,7 @@ export const MyStationsView: React.FC<Props> = ({ userLocation: _userLocation })
       lng: editLng,
       status: editStatus,
       needs: editNeeds,
-      offerings: editOfferings,
+      offerings: editOfferings.map(item => ({ item, status: SupplyStatus.AVAILABLE })),
     };
 
     try {
@@ -128,7 +128,7 @@ export const MyStationsView: React.FC<Props> = ({ userLocation: _userLocation })
       if (existing) {
         return prev.filter(n => n.item !== item);
       }
-      return [...prev, { item, quantity: undefined }];
+      return [...prev, { item, status: SupplyStatus.URGENT, quantity: undefined }];
     });
   };
 
@@ -295,7 +295,10 @@ export const MyStationsView: React.FC<Props> = ({ userLocation: _userLocation })
     switch (status) {
       case SupplyStatus.AVAILABLE: return 'bg-green-100 text-green-800 border-green-200';
       case SupplyStatus.LOW_STOCK: return 'bg-yellow-100 text-yellow-800 border-yellow-200';
-      case SupplyStatus.EMPTY_CLOSED: return 'bg-red-100 text-red-800 border-red-200';
+      case SupplyStatus.URGENT: return 'bg-red-100 text-red-800 border-red-200';
+      case SupplyStatus.NO_DATA: return 'bg-gray-100 text-gray-800 border-gray-200';
+      case SupplyStatus.GOV_CONTROL: return 'bg-blue-100 text-blue-800 border-blue-200';
+      case SupplyStatus.PAUSED: return 'bg-purple-100 text-purple-800 border-purple-200';
       default: return 'bg-gray-100';
     }
   };
@@ -304,7 +307,10 @@ export const MyStationsView: React.FC<Props> = ({ userLocation: _userLocation })
     switch (status) {
       case SupplyStatus.AVAILABLE: return 'status.available';
       case SupplyStatus.LOW_STOCK: return 'status.low_stock';
-      case SupplyStatus.EMPTY_CLOSED: return 'status.closed';
+      case SupplyStatus.URGENT: return 'status.urgent';
+      case SupplyStatus.NO_DATA: return 'status.no_data';
+      case SupplyStatus.GOV_CONTROL: return 'status.gov_control';
+      case SupplyStatus.PAUSED: return 'status.paused';
       default: return 'status.available';
     }
   };
@@ -400,7 +406,7 @@ export const MyStationsView: React.FC<Props> = ({ userLocation: _userLocation })
           <div className="bg-white rounded-xl p-4 shadow-sm border border-gray-100">
             <label className="text-gray-500 text-xs font-bold uppercase block mb-2">{t('station.status')}</label>
             <div className="flex gap-2">
-              {[SupplyStatus.AVAILABLE, SupplyStatus.LOW_STOCK, SupplyStatus.EMPTY_CLOSED].map(s => (
+              {[SupplyStatus.AVAILABLE, SupplyStatus.LOW_STOCK, SupplyStatus.URGENT, SupplyStatus.NO_DATA, SupplyStatus.GOV_CONTROL, SupplyStatus.PAUSED].map(s => (
                 <button 
                   key={s}
                   onClick={() => setEditStatus(s)}
@@ -408,7 +414,10 @@ export const MyStationsView: React.FC<Props> = ({ userLocation: _userLocation })
                     editStatus === s 
                       ? s === SupplyStatus.AVAILABLE ? 'bg-green-500 text-white border-green-500'
                         : s === SupplyStatus.LOW_STOCK ? 'bg-yellow-500 text-white border-yellow-500'
-                        : 'bg-red-500 text-white border-red-500'
+                        : s === SupplyStatus.URGENT ? 'bg-red-500 text-white border-red-500'
+                        : s === SupplyStatus.NO_DATA ? 'bg-gray-500 text-white border-gray-500'
+                        : s === SupplyStatus.GOV_CONTROL ? 'bg-blue-500 text-white border-blue-500'
+                        : 'bg-purple-500 text-white border-purple-500'
                       : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
                   }`}
                 >
@@ -509,7 +518,7 @@ export const MyStationsView: React.FC<Props> = ({ userLocation: _userLocation })
                   itemsFilter={(item) => !editNeeds.find(n => n.item === item)}
                   allowAddItem={true}
                   allowAddCategory={true}
-                  onAddItem={(_cat, item) => { addOfferingItem(_cat, item); setEditNeeds(prev => [...prev, { item, quantity: undefined }]); }}
+                  onAddItem={(_cat, item) => { addOfferingItem(_cat, item); setEditNeeds(prev => [...prev, { item, status: SupplyStatus.URGENT, quantity: undefined }]); }}
                   onAddCategory={(cat) => addOfferingCategory(cat)}
                 />
               </div>

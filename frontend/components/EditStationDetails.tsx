@@ -17,7 +17,7 @@ const EditStationDetails: React.FC<Props> = ({ station, onClose, onStationUpdate
   const { t } = useLanguage();
   const [editStatus, setEditStatus] = useState<SupplyStatus>(station.status);
   const [editNeeds, setEditNeeds] = useState<NeedItem[]>(station.needs ? [...station.needs] : []);
-  const [editOfferings, setEditOfferings] = useState<string[]>(station.offerings ? [...station.offerings] : []);
+  const [editOfferings, setEditOfferings] = useState<string[]>(station.offerings ? station.offerings.map(o => o.item) : []);
   const [editName, setEditName] = useState(station.name);
   const [editAddress, setEditAddress] = useState(station.address);
   const [editLat, setEditLat] = useState<number>(station.lat);
@@ -72,7 +72,7 @@ const EditStationDetails: React.FC<Props> = ({ station, onClose, onStationUpdate
   }, [editLat, editLng]);
 
   const handleSave = async () => {
-        const updated = { ...station, name: editName, address: editAddress, lat: editLat, lng: editLng, status: editStatus, needs: editNeeds, offerings: editOfferings, remarks: editRemarks };
+        const updated = { ...station, name: editName, address: editAddress, lat: editLat, lng: editLng, status: editStatus, needs: editNeeds, offerings: editOfferings.map(item => ({ item, status: SupplyStatus.AVAILABLE })), remarks: editRemarks };
     await updateStation(updated);
     onStationUpdated(updated);
     showToast('Station updated successfully', 'success');
@@ -83,7 +83,10 @@ const EditStationDetails: React.FC<Props> = ({ station, onClose, onStationUpdate
     switch (status) {
       case SupplyStatus.AVAILABLE: return 'status.available';
       case SupplyStatus.LOW_STOCK: return 'status.low_stock';
-      case SupplyStatus.EMPTY_CLOSED: return 'status.closed';
+      case SupplyStatus.URGENT: return 'status.urgent';
+      case SupplyStatus.NO_DATA: return 'status.no_data';
+      case SupplyStatus.GOV_CONTROL: return 'status.gov_control';
+      case SupplyStatus.PAUSED: return 'status.paused';
       default: return 'status.available';
     }
   };
@@ -142,7 +145,7 @@ const EditStationDetails: React.FC<Props> = ({ station, onClose, onStationUpdate
               return prev.filter(n => n.item !== item);
           }
           // Add new need with undefined quantity
-          return [...prev, { item, quantity: undefined, unit: '' }];
+          return [...prev, { item, status: SupplyStatus.URGENT, quantity: undefined }];
       });
   };
 
@@ -174,16 +177,6 @@ const EditStationDetails: React.FC<Props> = ({ station, onClose, onStationUpdate
           }
           return n;
       }));
-  };
-
-  // Update need unit
-  const updateNeedUnit = (item: string, unit: string) => {
-    setEditNeeds(prev => prev.map(n => {
-        if (n.item === item) {
-            return { ...n, unit: unit };
-        }
-        return n;
-    }));
   };
 
   return (
@@ -235,7 +228,7 @@ const EditStationDetails: React.FC<Props> = ({ station, onClose, onStationUpdate
            <div>
                <label className="text-gray-500 text-xs font-bold uppercase">Status</label>
                <div className="flex gap-2 mt-1">
-                   {[SupplyStatus.AVAILABLE, SupplyStatus.LOW_STOCK, SupplyStatus.EMPTY_CLOSED].map(s => (
+                   {[SupplyStatus.AVAILABLE, SupplyStatus.LOW_STOCK, SupplyStatus.URGENT, SupplyStatus.NO_DATA, SupplyStatus.GOV_CONTROL, SupplyStatus.PAUSED].map(s => (
                        <button 
                         key={s}
                         onClick={() => setEditStatus(s)}
@@ -314,13 +307,6 @@ const EditStationDetails: React.FC<Props> = ({ station, onClose, onStationUpdate
                                    >
                                        <Plus size={14} />
                                    </button>
-                                   <input
-                                       type="text"
-                                       placeholder="Unit"
-                                       value={need.unit || ''}
-                                       onChange={e => updateNeedUnit(need.item, e.target.value)}
-                                       className="w-16 h-7 rounded bg-white text-gray-900 text-center text-sm border border-gray-300"
-                                   />
                                    <button
                                        onClick={() => toggleNeed(need.item)}
                                        className="w-6 h-6 rounded bg-red-500 text-white flex items-center justify-center hover:bg-red-600 ml-1"
@@ -349,7 +335,7 @@ const EditStationDetails: React.FC<Props> = ({ station, onClose, onStationUpdate
                           itemsFilter={(item) => !editNeeds.find(n => n.item === item)}
                          allowAddItem={true}
                          allowAddCategory={true}
-                         onAddItem={(_cat, item) => { addOfferingItem(_cat, item); setEditNeeds(prev => [...prev, { item, quantity: 1 }]); }}
+                         onAddItem={(_cat, item) => { addOfferingItem(_cat, item); setEditNeeds(prev => [...prev, { item, status: SupplyStatus.URGENT, quantity: 1 }]); }}
                          onAddCategory={(cat) => addOfferingCategory(cat)}
                       />
                    </div>
