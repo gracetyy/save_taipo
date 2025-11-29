@@ -5,16 +5,17 @@ import { getStations, getFavoriteIds, getGlobalAlert, setGlobalAlert } from '../
 import { StationCard } from '../components/StationCard';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { User, LogOut, ShieldCheck, Truck, Users, UserCircle, Bell, Save, Home, ChevronRight } from 'lucide-react';
+import { User, LogOut, ShieldCheck, Truck, Users, UserCircle, Bell, Save, Home, ChevronRight, MapPin } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 
 import { DriverRequestModal } from '../components/DriverRequestModal';
 
 interface Props {
   userLocation: { lat: number; lng: number } | null;
+  onSetLocation?: (coords: { lat: number; lng: number }) => void;
 }
 
-export const MeView: React.FC<Props> = ({ userLocation }) => {
+export const MeView: React.FC<Props> = ({ userLocation, onSetLocation }) => {
   const navigate = useNavigate();
   const { user, logout, login, refreshUser } = useAuth();
   const { t } = useLanguage();
@@ -48,6 +49,33 @@ export const MeView: React.FC<Props> = ({ userLocation }) => {
       setOwnedStationsCount(owned.length);
     }
     setIsLoading(false);
+  };
+
+  const handleEnableLocation = () => {
+    const defaultComplete = () => {
+      showToast('Unable to retrieve location; you may need to allow permissions in your browser settings.', 'error');
+    };
+    if (navigator.geolocation) {
+      try {
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            const coords = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+            try { localStorage.setItem('user_location', JSON.stringify(coords)); } catch {}
+            if (onSetLocation) onSetLocation(coords);
+            showToast('Location updated', 'success');
+          },
+          (err) => {
+            console.warn('Location permission denied or failed', err);
+            defaultComplete();
+          }
+        );
+      } catch (err) {
+        console.warn('Location API error', err);
+        defaultComplete();
+      }
+    } else {
+      defaultComplete();
+    }
   };
 
   useEffect(() => {
@@ -98,7 +126,7 @@ export const MeView: React.FC<Props> = ({ userLocation }) => {
       {/* Profile Section */}
       <div className="bg-white p-6 mb-2 border-b">
         <h2 className="text-2xl font-bold mb-4">{t('me.title')}</h2>
-        {user ? (
+                {user ? (
           <div className="flex items-center space-x-4">
             <div className="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-gray-500 font-bold text-xl">
                 {user.name.charAt(0)}
@@ -109,6 +137,14 @@ export const MeView: React.FC<Props> = ({ userLocation }) => {
                 </h3>
                 <div className="flex items-center gap-2 mt-1 mb-2">
                     {getRoleBadge(user.role)}
+                    <div className="mt-2 flex gap-2">
+                      <button
+                        onClick={handleEnableLocation}
+                        className="text-sm text-blue-600 font-bold flex items-center hover:bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 transition w-fit"
+                      >
+                        <MapPin size={14} className="mr-1.5"/> {t('btn.directions')}
+                      </button>
+                    </div>
                 </div>
                 <p className="text-gray-500 text-sm mb-2">{user.email}</p>
                 {user.role !== UserRole.DRIVER && user.role !== UserRole.ADMIN && (
@@ -136,12 +172,20 @@ export const MeView: React.FC<Props> = ({ userLocation }) => {
                     <User size={24} />
                 </div>
                 <p className="text-gray-500 mb-3 text-sm">{t('me.login_desc')}</p>
-                <button
+                <div className="flex items-center justify-center gap-2">
+                  <button
                     onClick={login}
                     className="bg-black text-white px-6 py-2 rounded-full font-bold text-sm shadow-lg hover:scale-105 transition"
-                >
+                  >
                     {t('btn.signin')}
-                </button>
+                  </button>
+                  <button
+                    onClick={handleEnableLocation}
+                    className="text-sm text-blue-600 px-4 py-2 font-bold rounded-full border border-blue-100 hover:bg-blue-50 transition"
+                  >
+                    {t('onboarding.location_allow')}
+                  </button>
+                </div>
             </div>
         )}
       </div>

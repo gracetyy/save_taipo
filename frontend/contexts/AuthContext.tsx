@@ -28,6 +28,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // Send token to backend to verify and get user profile
           const userProfile = await apiClient.post<UserProfile>('/auth/login', { token });
           setUser(userProfile);
+        // If user has a preferred language, persist locally and notify rest of app
+        try {
+          if (typeof window !== 'undefined' && userProfile.prefersLanguage) {
+            localStorage.setItem('language', userProfile.prefersLanguage);
+            window.dispatchEvent(new CustomEvent('userPrefersLanguage', { detail: userProfile.prefersLanguage }));
+          }
+          if (typeof window !== 'undefined' && userProfile.welcomeShown) {
+            localStorage.setItem('onboarding_welcome_shown_v1', 'true');
+          }
+        } catch (err) {
+          // ignore
+        }
           localStorage.setItem('resq_user_session_v2', JSON.stringify(userProfile));
       } catch (error) {
           console.error("Authentication Error:", error);
@@ -58,7 +70,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setIsLoading(false);
     });
 
-    return () => unsubscribe();
+      // listen for language change events from LanguageContext
+      const onLangChange = async (ev: any) => {
+        const lang = ev?.detail;
+        if (!lang) return;
+        // If user is logged in, update preference on backend
+        if (auth.currentUser) {
+          try {
+            await apiClient.post('/users/self-update', { prefersLanguage: lang });
+          } catch (err) {
+            console.error('Failed to persist language preference', err);
+          }
+        }
+      };
+      if (typeof window !== 'undefined') {
+        window.addEventListener('languageChanged', onLangChange);
+      }
+
+    return () => {
+      unsubscribe();
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('languageChanged', onLangChange);
+      }
+    };
   }, []);
 
   const refreshUser = async () => {
@@ -101,6 +135,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     setUser(mockUser);
     localStorage.setItem('resq_user_session_v2', JSON.stringify(mockUser));
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('language', mockUser.prefersLanguage || 'en');
+        window.dispatchEvent(new CustomEvent('userPrefersLanguage', { detail: mockUser.prefersLanguage }));
+      }
+    } catch {}
 };
 
 if (import.meta.env.DEV) {

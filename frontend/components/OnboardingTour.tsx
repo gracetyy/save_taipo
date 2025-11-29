@@ -6,14 +6,26 @@ import { ChevronRight, User, Heart, Truck, Users, LayoutDashboard } from 'lucide
 import { useLanguage } from '../contexts/LanguageContext';
 
 interface OnboardingTourProps {
-    onComplete?: () => void;
+    onComplete?: (coords?: { lat: number; lng: number }) => void;
 }
 
 export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) => {
-    const { user, refreshUser } = useAuth();
+    const { user, refreshUser, login } = useAuth();
     const { t, setLanguage, language } = useLanguage();
     const [isVisible, setIsVisible] = useState(false);
-    const [step, setStep] = useState(0);
+    const [step, setStep] = useState(() => {
+        try {
+            // logged-in users who already finished the tour shouldn't see welcome
+            if (user) {
+                const completed = localStorage.getItem(`onboarding_completed_${user.id}_v2`);
+                if (completed) return 1;
+            }
+            const seen = localStorage.getItem('onboarding_welcome_shown_v1');
+            return seen ? 1 : 0;
+        } catch (err) {
+            return 0;
+        }
+    });
     const [selectedRole, setSelectedRole] = useState<UserRole | null>(null);
 
     useEffect(() => {
@@ -30,13 +42,13 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) =>
         }
     }, [user]);
 
-    const handleComplete = () => {
+    const handleComplete = (coords?: { lat: number; lng: number }) => {
         if (user) {
             const storageKey = `onboarding_completed_${user.id}_v2`;
             localStorage.setItem(storageKey, 'true');
         }
         setIsVisible(false);
-        if (onComplete) onComplete();
+        if (onComplete) onComplete(coords);
     };
 
     const updateRole = async (role: UserRole) => {
@@ -53,6 +65,8 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) =>
 
     if (!isVisible) return null;
 
+    // Welcome step removed — onboarding starts at role selection (step 1). Kept for reference if needed.
+
     const renderWelcomeStep = () => (
         <div className="text-center space-y-6">
             <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
@@ -67,7 +81,17 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) =>
                 <button onClick={() => setLanguage('zh')} className={`px-3 py-1 rounded-md ${language === 'zh' ? 'bg-blue-600 text-white' : 'bg-gray-200'}`}>中文</button>
             </div>
             <button
-                onClick={() => setStep(1)}
+                onClick={async () => {
+                    try { localStorage.setItem('onboarding_welcome_shown_v1', 'true'); } catch {}
+                    try {
+                        if (user) {
+                            await apiClient.post('/users/self-update', { welcomeShown: true });
+                        }
+                    } catch (err) {
+                        console.error('Failed to persist welcomeShown on backend', err);
+                    }
+                    setStep(1);
+                }}
                 className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
             >
                 {t('get_started')}
@@ -78,6 +102,14 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) =>
     const renderRoleSelection = () => (
         <div className="space-y-4">
              <h2 className="text-xl font-bold text-gray-800">{t('what_brings_you_here')}</h2>
+            <div className="text-right">
+                <button
+                    onClick={() => setStep(3)}
+                    className="text-sm text-gray-600 hover:text-gray-900"
+                >
+                    {t('btn.skip')}
+                </button>
+            </div>
             <div className="grid gap-4">
                 <button
                     onClick={() => updateRole(UserRole.RESIDENT)}
@@ -139,25 +171,15 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) =>
                 title = t('welcome_resident_title');
                 content = (
                     <>
-                        <p>{t('welcome_resident_subtitle')}</p>
-                        <ul className="list-disc pl-5 space-y-2">
-                            <li>{t('resident_point_1')}</li>
-                            <li>{t('resident_point_2')}</li>
-                            <li>{t('resident_point_3')}</li>
-                        </ul>
+                        <div className="whitespace-pre-line text-gray-600">{t('resident_points')}</div>
                     </>
                 );
                 break;
-             case UserRole.VOLUNTEER:
+            case UserRole.VOLUNTEER:
                 title = t('welcome_volunteer_title');
                 content = (
                     <>
-                        <p>{t('welcome_volunteer_subtitle')}</p>
-                        <ul className="list-disc pl-5 space-y-2">
-                            <li>{t('volunteer_point_1')}</li>
-                            <li>{t('volunteer_point_2')}</li>
-                            <li>{t('volunteer_point_3')}</li>
-                        </ul>
+                        <div className="whitespace-pre-line text-gray-600">{t('volunteer_points')}</div>
                     </>
                 );
                 break;
@@ -165,11 +187,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) =>
                 title = t('welcome_driver_title');
                 content = (
                     <>
-                        <p>{t('welcome_driver_subtitle')}</p>
-                        <ul className="list-disc pl-5 space-y-2">
-                            <li>{t('driver_point_1')}</li>
-                            <li>{t('driver_point_2')}</li>
-                        </ul>
+                        <div className="whitespace-pre-line text-gray-600">{t('driver_points')}</div>
                     </>
                 );
                 break;
@@ -177,12 +195,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) =>
                  title = t('welcome_station_manager_title');
                  content = (
                     <>
-                        <p>{t('welcome_station_manager_subtitle')}</p>
-                        <ul className="list-disc pl-5 space-y-2">
-                            <li>{t('station_manager_point_1')}</li>
-                            <li>{t('station_manager_point_2')}</li>
-                            <li>{t('station_manager_point_3')}</li>
-                        </ul>
+                        <div className="whitespace-pre-line text-gray-600">{t('station_manager_points')}</div>
                     </>
                  );
                  break;
@@ -190,12 +203,7 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) =>
                 title = t('welcome_admin_title');
                  content = (
                     <>
-                        <p>{t('welcome_admin_subtitle')}</p>
-                        <ul className="list-disc pl-5 space-y-2">
-                            <li>{t('admin_point_1')}</li>
-                            <li>{t('admin_point_2')}</li>
-                            <li>{t('admin_point_3')}</li>
-                        </ul>
+                        <div className="whitespace-pre-line text-gray-600">{t('admin_points')}</div>
                     </>
                  );
                 break;
@@ -214,13 +222,43 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) =>
                     <h2 className="text-xl font-bold text-gray-800">{title}</h2>
                 </div>
                  <div className="space-y-3 text-gray-600">{content}</div>
-                <button
-                    onClick={handleComplete}
-                    className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
-                >
-                    <span>{t('get_started')}</span>
-                    <ChevronRight className="w-5 h-5" />
-                </button>
+                <div className="p-4 bg-gray-50 rounded-lg border text-sm text-gray-700">
+                    <div className="font-semibold mb-1">{t('onboarding.logged_in_features.title')}</div>
+                    <div>{t('onboarding.logged_in_features.desc')}</div>
+                </div>
+                <div className="space-y-2">
+                    <button
+                        onClick={async () => {
+                            try {
+                                await login();
+                                await refreshUser();
+                                if (selectedRole) {
+                                    try {
+                                        await apiClient.post('/roles/self-update', { role: selectedRole });
+                                        await refreshUser();
+                                    } catch (err) {
+                                        console.error('Failed to set role after login', err);
+                                    }
+                                }
+                            } catch (err) {
+                                console.error('Login failed', err);
+                            } finally {
+                                setStep(3);
+                            }
+                        }}
+                        className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                    >
+                        <span>{t('get_started')}</span>
+                        <ChevronRight className="w-5 h-5" />
+                    </button>
+                    <button
+                        disabled={false}
+                        onClick={() => setStep(3)}
+                        className="w-full border border-gray-300 text-gray-900 py-3 rounded-lg font-semibold hover:bg-gray-50"
+                    >
+                        {t('btn.continue_without_login')}
+                    </button>
+                </div>
                  <button
                     onClick={() => setStep(1)}
                     className="w-full text-center text-sm text-gray-600 hover:text-gray-900 mt-2"
@@ -232,12 +270,50 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) =>
     };
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in duration-300">
                 <div className="p-6 md:p-8">
-                    {step === 0 && renderWelcomeStep()}
-                    {step === 1 && renderRoleSelection()}
-                    {step === 2 && renderRoleInfo()}
+                                                {/* welcome page is step 0 */}
+                                                {step === 0 && renderWelcomeStep()}
+                                                {step === 1 && renderRoleSelection()}
+                                {step === 2 && renderRoleInfo()}
+                                {step === 3 && (
+                                        <div className="text-center space-y-6">
+                                                <div className="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
+                                                        <span className="text-3xl">📍</span>
+                                                </div>
+                                                <div>
+                                                        <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('onboarding.location_title')}</h1>
+                                                        <p className="text-gray-600">{t('onboarding.location_desc')}</p>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <button
+                                                        onClick={() => {
+                                                            const defaultComplete = () => handleComplete();
+                                                            if (navigator.geolocation) {
+                                                                try {
+                                                                    navigator.geolocation.getCurrentPosition(
+                                                                        (pos) => handleComplete({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+                                                                        (err) => { console.warn('Location permission denied or failed', err); defaultComplete(); }
+                                                                    );
+                                                                } catch (err) {
+                                                                    console.warn('Location API error', err); defaultComplete();
+                                                                }
+                                                            } else { defaultComplete(); }
+                                                        }}
+                                                        className="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                                                    >
+                                                        {t('onboarding.location_allow')}
+                                                    </button>
+                                                    <button
+                                                        onClick={() => handleComplete()}
+                                                        className="w-full border border-gray-300 text-gray-900 py-3 rounded-lg font-semibold hover:bg-gray-50"
+                                                    >
+                                                        {t('onboarding.location_maybe_later')}
+                                                    </button>
+                                                </div>
+                                        </div>
+                                )}
                 </div>
             </div>
         </div>

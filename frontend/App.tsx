@@ -28,21 +28,15 @@ const AppContent = () => {
     if (!hasCompletedPreLoginOnboarding) {
       setShowPreLoginOnboarding(true);
     }
-
-    if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition(
-            (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-            (err) => console.warn("Location access denied or failed", err)
-        );
-    }
   }, []);
 
   const handleRoleSelected = (role: UserRole) => {
     localStorage.setItem('preLoginRoleSelection_v1', role);
   };
 
-  const handleOnboardingComplete = () => {
+  const handleOnboardingComplete = (coords?: {lat: number, lng: number}) => {
     localStorage.setItem('preLoginOnboardingCompleted_v1', 'true');
+    if (coords) setLocation(coords);
     setShowPreLoginOnboarding(false);
   };
 
@@ -52,14 +46,14 @@ const AppContent = () => {
 
   return (
     <HashRouter>
-        <OnboardingTour />
+        <OnboardingTour onComplete={handleOnboardingComplete} />
         <Routes>
             <Route element={<MainLayout />}>
                 {/* Public / Resident Routes */}
                 <Route path="/" element={<ResidentView userLocation={location} />} />
                 <Route path="/resident" element={<ResidentView userLocation={location} />} />
                 <Route path="/links" element={<UsefulLinksView />} />
-                <Route path="/me" element={<MeView userLocation={location} />} />
+                <Route path="/me" element={<MeView userLocation={location} onSetLocation={setLocation} />} />
                 <Route path="/station/:id" element={<StationDetailView userLocation={location} />} />
 
                 {/* Volunteer Routes */}

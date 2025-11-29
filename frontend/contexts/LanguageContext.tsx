@@ -10,30 +10,27 @@ const translations = {
     en: {
         "welcome_title": "Welcome to Tai Po Rescue",
         "welcome_subtitle": "We connect neighbors to help each other during emergencies. Let's get you set up.",
-        "welcome_resident_title": "Welcome Resident",
-        "welcome_resident_subtitle": "As a resident, you can:",
-        "resident_point_1": "Find nearby stations for supplies and help.",
-        "resident_point_2": "Stay updated on station statuses.",
-        "resident_point_3": "Favorite stations for quick access.",
-        "welcome_volunteer_title": "Welcome Volunteer",
-        "welcome_volunteer_subtitle": "Your help is crucial. As a volunteer, you can:",
-        "volunteer_point_1": "Join a Station Team to coordinate efforts.",
-        "volunteer_point_2": "View and accept Tasks to help operations run smoothly.",
-        "volunteer_point_3": "Update station statuses to keep residents informed.",
+        "welcome_resident_title": "Welcome.",
+        "resident_points": "This app helps you quickly find nearby shelters and supply points. You can use the map and filter by the type of support you need (for example warm clothing, food, power banks, or pet support), and you can also browse curated useful links and other platforms.",
+        "welcome_volunteer_title": "Thank you for stepping up to help.",
+        "volunteer_points": "This app shows you, in real time, which locations need supplies or manpower, and you can filter by the types of items you have so you know exactly where they’re needed. You can also open the useful links area to quickly access Telegram groups and other platforms.",
         "welcome_driver_title": "Welcome Driver",
         "welcome_driver_subtitle": "Your vehicle can make a huge difference:",
         "driver_point_1": "Find Transport Tasks to move supplies.",
         "driver_point_2": "Accept tasks that fit your vehicle type and route.",
+        "driver_points": "Find Transport Tasks to move supplies.\nAccept tasks that fit your vehicle type and route.",
         "welcome_station_manager_title": "Welcome Station Manager",
         "welcome_station_manager_subtitle": "You are key to your station's success:",
         "station_manager_point_1": "Manage your station's details, status, and inventory.",
         "station_manager_point_2": "Create tasks for your station team.",
         "station_manager_point_3": "Broadcast alerts to residents.",
+        "station_manager_points": "Manage your station's details, status, and inventory.\nCreate tasks for your station team.\nBroadcast alerts to residents.",
         "welcome_admin_title": "Welcome Admin",
         "welcome_admin_subtitle": "System Overview:",
         "admin_point_1": "Manage all users, stations, and tasks.",
         "admin_point_2": "Review analytics and system health.",
         "admin_point_3": "Handle high-level configurations and alerts.",
+        "admin_points": "Manage all users, stations, and tasks.\nReview analytics and system health.\nHandle high-level configurations and alerts.",
         "get_started": "Get Started",
         "next": "Next",
         "back": "Back",
@@ -113,6 +110,14 @@ const translations = {
         "btn.signout": "Sign Out",
         "me.login_desc": "Log in to save favorites and contribute.",
         "btn.signin": "Sign In with Google",
+        "btn.continue_without_login": "Continue without login",
+        "onboarding.logged_in_features.title": "Extra features if you sign in",
+        "onboarding.logged_in_features.desc": "Sign in to save favorites and like / dislike stations ",
+        "onboarding.location_title": "Enable location to find nearby help",
+        "onboarding.location_desc": "We use your location to show nearby stations and route directions. You can enable location now or choose to allow it later.",
+        "onboarding.location_allow": "Allow Location",
+        "onboarding.location_maybe_later": "Maybe later",
+        "btn.skip": "Skip",
         "admin.global_alert_broadcast": "Global Alert Broadcast",
         "admin.alert_placeholder": "Enter a global alert message",
         "admin.publish_alert": "Publish Alert",
@@ -308,32 +313,29 @@ const translations = {
         "心理支援": "Psychological Support"
     },
     zh: {
-        "welcome_title": "大埔救急 - 確保每分民間力量都用得其所",
-        "welcome_subtitle": "一個針對為受大埔宏福苑火災影響嘅街坊同救援義工而設嘅即時資訊整合平台",
-        "welcome_resident_title": "歡迎",
-        "welcome_resident_subtitle": "作為居民，您可以：",
-        "resident_point_1": "搵最近你嘅物資站。",
-        "resident_point_2": "根據所需物資filter物資站",
-        "resident_point_3": "登入之後可以save低物資站",
-        "welcome_volunteer_title": "歡迎",
-        "welcome_volunteer_subtitle": "您的幫助至關重要。您可以：",
-        "volunteer_point_1": "睇到每個物資站嘅狀態",
-        "volunteer_point_2": "根據自己手上有嘅物資搵下有邊度需要",
-        "volunteer_point_3": "同多啲居民講呢一個app",
+        "welcome_title": "大埔救急",
+        "welcome_subtitle": "一個針對為受大埔宏福苑火災影響嘅街坊同救援義工而設嘅即時資訊整合平台，確保每分民間力量都用得其所",
+        "welcome_resident_title": "你好",
+        "resident_points": "你可以用呢個app去搵最近嘅物資站同庇護中心，亦可以filter自己需要嘅資源類型（例如保暖物資、食物、尿袋、寵物支援）。\n你亦都可以睇到整理好嘅links同求助資訊。",
+        "welcome_volunteer_title": "你好",
+        "volunteer_points": "多謝你出一分力。你可以用呢個app實時睇到各個物資站需要咩物資或者人手，再用filter返你手上有嘅物資。\n你亦都可以搵到整理好嘅其他平台links同各個TG群組。",
         "welcome_driver_title": "歡迎",
         "welcome_driver_subtitle": "您的車輛可以發揮巨大作用：",
         "driver_point_1": "尋找運輸任務以運送物資。",
         "driver_point_2": "接受適合您車型和路線的任務。",
+        "driver_points": "尋找運輸任務以運送物資。\n接受適合您車型和路線的任務。",
         "welcome_station_manager_title": "歡迎站長",
         "welcome_station_manager_subtitle": "您是您站點成功的關鍵：",
         "station_manager_point_1": "管理您站點的詳細資訊、狀態和庫存。",
         "station_manager_point_2": "為您的站點團隊創建任務。",
         "station_manager_point_3": "向居民廣播警報。",
+        "station_manager_points": "管理您站點的詳細資訊、狀態和庫存。\n為您的站點團隊創建任務。\n向居民廣播警報。",
         "welcome_admin_title": "歡迎",
         "welcome_admin_subtitle": "系統概覽：",
         "admin_point_1": "管理所有使用者、站點和任務。",
         "admin_point_2": "查看分析和系統健康狀況。",
         "admin_point_3": "處理高層級配置和警報。",
+        "admin_points": "管理所有使用者、站點和任務。\n查看分析和系統健康狀況。\n處理高層級配置和警報。",
         "get_started": "開始",
         "next": "下一步",
         "back": "返回",
@@ -413,6 +415,14 @@ const translations = {
         "btn.signout": "登出",
         "me.login_desc": "登入以儲存我的最愛和貢獻。",
         "btn.signin": "使用 Google 登入",
+        "btn.continue_without_login": "以訪客身份繼續",
+        "btn.skip": "跳過",
+        "onboarding.logged_in_features.title": "登入後可以：",
+        "onboarding.logged_in_features.desc": "收藏同埋👍/👎評價物資站",
+        "onboarding.location_title": "開啟定位以尋找附近物資站",
+        "onboarding.location_desc": "我哋會用你嘅位置幫你顯示附近有咩物資站。\n你可以而家允許定位，或者之後再喺設定入面開啟。",
+        "onboarding.location_allow": "允許定位",
+        "onboarding.location_maybe_later": "遲啲先算",
         "admin.global_alert_broadcast": "全域警報廣播",
         "admin.alert_placeholder": "輸入全域警報訊息",
         "admin.publish_alert": "發佈警報",
@@ -624,16 +634,53 @@ export const LanguageProvider = ({
 }: {
     children: ReactNode
 }) => {
-    const [language, setLanguage] = useState<Language>('zh');
+    const [language, setLanguage] = useState<Language>(() => {
+        try {
+            const saved = typeof window !== 'undefined' && localStorage.getItem('language');
+            return (saved as Language) || 'zh';
+        } catch (err) {
+            return 'zh';
+        }
+    });
 
     const t = (key: keyof typeof translations.en) => {
         return translations[language][key] || translations.en[key];
     };
 
+    const setLang = (lang: Language) => {
+        setLanguage(lang);
+        try {
+            if (typeof window !== 'undefined') {
+                localStorage.setItem('language', lang);
+            }
+        } catch (err) {
+            // ignore localStorage errors
+        }
+        try {
+            if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('languageChanged', { detail: lang }));
+            }
+        } catch (err) {
+            // ignore
+        }
+    };
+
+    React.useEffect(() => {
+        if (typeof window === 'undefined') return;
+        const handler = (ev: any) => {
+            const lang = ev?.detail;
+            if (lang && (lang === 'en' || lang === 'zh')) {
+                setLang(lang);
+            }
+        };
+        window.addEventListener('languageChanged', handler);
+        return () => window.removeEventListener('languageChanged', handler);
+    }, []);
+
     return (
         <LanguageContext.Provider value={{
             language,
-            setLanguage,
+            setLanguage: setLang,
             t
         }}>
             {children}
@@ -648,3 +695,16 @@ export const useLanguage = () => {
     }
     return context;
 };
+
+// Listen for user-driven language defaults (from AuthContext)
+if (typeof window !== 'undefined') {
+    window.addEventListener('userPrefersLanguage', (ev: any) => {
+        const lang = ev?.detail;
+        if (lang && (lang === 'en' || lang === 'zh')) {
+            // set and persist the language for the app
+            try { localStorage.setItem('language', lang); } catch {}
+            const event = new CustomEvent('languageChanged', { detail: lang });
+            window.dispatchEvent(event);
+        }
+    });
+}

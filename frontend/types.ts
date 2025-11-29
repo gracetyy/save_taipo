@@ -78,6 +78,7 @@ export interface UserProfile {
     // User settings/preferences
     prefersLanguage: 'en' | 'zh';
     notificationsEnabled: boolean;
+    welcomeShown?: boolean; // Whether the user has completed/seen the welcome step (persisted)
 }
 
 

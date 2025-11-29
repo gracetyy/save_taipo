@@ -11,6 +11,7 @@ import favoritesRouter from './routes/favorites';
 import rolesRouter from './routes/roles';
 import authRouter from './routes/auth';
 import alertsRouter from './routes/alerts';
+import usersRouter from './routes/users';
 import { transportRouter } from './routes/transport';
 
 // Initialize Firebase Admin (only if not already initialized)
@@ -39,6 +40,7 @@ apiRouter.use('/favorites', favoritesRouter);
 apiRouter.use('/roles', rolesRouter);
 apiRouter.use('/transport', transportRouter);
 apiRouter.use('/alerts', alertsRouter);
+apiRouter.use('/users', usersRouter);
 
 // Health check on the API router
 apiRouter.get('/health', (req, res) => {
