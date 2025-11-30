@@ -514,7 +514,7 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
                           onClick={() => setSortBy(sortBy === 'STATUS' ? 'DISTANCE' : 'STATUS')}
                           className={`whitespace-nowrap text-xs font-bold text-gray-600 flex items-center bg-gray-100 px-2 py-1 rounded-md transition ${(!userLocation && sortBy === 'STATUS') ? 'opacity-60 cursor-not-allowed' : 'hover:bg-gray-200'}`}
                           disabled={!userLocation && sortBy === 'STATUS'}
-                          title={!userLocation && sortBy === 'STATUS' ? t('sort.distance_disabled') : (sortBy === 'STATUS' ? t('sort.status') : t('sort.distance'))}
+                          title={!userLocation && sortBy === 'STATUS' ? t('sort.distance_disabled' as any) : (sortBy === 'STATUS' ? t('sort.status') : t('sort.distance'))}
                           aria-disabled={!userLocation && sortBy === 'STATUS'}
                           aria-pressed={sortBy === 'DISTANCE'}
                  >

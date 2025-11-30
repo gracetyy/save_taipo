@@ -268,7 +268,7 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
                      <button 
                         onClick={handleFavorite}
                         className={`w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition ${isFav ? 'text-red-500' : 'text-gray-400'}`}
-                        aria-label={t('btn.favorite')}
+                        aria-label={t('btn.favorite' as any)}
                      >
                          <Heart size={16} className={isFav ? "fill-current" : ""}/>
                      </button>
