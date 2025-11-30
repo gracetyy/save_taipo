@@ -4,7 +4,7 @@ import { Station, UserRole, SupplyStatus, CrowdStatus, OFFERING_CATEGORIES } fro
 import { toggleFavorite, isFavorite, voteStation } from '../services/dataService';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { MapPin, Navigation, ThumbsUp, ThumbsDown, Edit2, Heart, Users, ShieldCheck, Share2, Phone } from 'lucide-react';
+import { MapPin, Navigation, ThumbsUp, ThumbsDown, Edit2, Heart, Users, ShieldCheck, Share2, Phone, ExternalLink } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 import { EditStationModal } from './EditStationModal';
 
@@ -18,16 +18,38 @@ interface StationCardProps {
 export const StationCard: React.FC<StationCardProps> = ({ station, userLocation, onUpdate, mode = 'RESIDENT' }) => {
     const navigate = useNavigate();
     const { user } = useAuth();
-    const { t } = useLanguage();
+    const { t, language } = useLanguage();
+    const getTypeLabel = (typeKey: any) => {
+        try {
+            const key = `type.${String(typeKey).toLowerCase()}`;
+            return t(key as any);
+        } catch (err) { return String(typeKey); }
+    }
+    const getTypeColorClass = (typeKey: string) => {
+        switch (typeKey) {
+            case 'SUPPLY': return 'bg-teal-50 text-teal-700 border-teal-100';
+            case 'SHELTER': return 'bg-indigo-50 text-indigo-700 border-indigo-100';
+            case 'PET_SHELTER': return 'bg-pink-50 text-pink-700 border-pink-100';
+            case 'FOOD_DISTRIBUTION': return 'bg-amber-50 text-amber-700 border-amber-100';
+            case 'MEDICAL': return 'bg-red-50 text-red-700 border-red-100';
+            case 'COLLECTION_POINT': return 'bg-violet-50 text-violet-700 border-violet-100';
+            default: return 'bg-gray-50 text-gray-700 border-gray-100';
+        }
+    }
+    const getOrganizerColorClass = (org: string) => {
+        switch (org) {
+            case 'GOV': return 'bg-blue-50 text-blue-700 border-blue-100';
+            case 'NGO': return 'bg-purple-50 text-purple-700 border-purple-100';
+            case 'COMMUNITY': return 'bg-gray-50 text-gray-700 border-gray-100';
+            default: return 'bg-gray-50 text-gray-700 border-gray-100';
+        }
+    }
     const { showToast } = useToast();
     
     const [isFav, setIsFav] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [distance, setDistance] = useState<string | null>(null);
-    // Debug logs are not shown in production.
-    if (import.meta.env.DEV) {
-        console.debug('StationCard (dev):', station.id, 'offerings', station.offerings?.length);
-    }
+    // Removed debug prints in prod/dev per request
 
     useEffect(() => {
         if (user) {
@@ -112,7 +134,13 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
         >
             <div className="flex justify-between items-start mb-2">
                 <div className="flex-1">
-                    <h3 className="font-bold text-lg text-gray-900 line-clamp-1">{station.name}</h3>
+                    <div className="flex items-center gap-2">
+                        <h3 className="font-bold text-lg text-gray-900 line-clamp-1 flex-1">{(language === 'en' && station.name_en && station.name_en.trim().length > 0) ? station.name_en : station.name}</h3>
+                        <div className="flex gap-2 items-center flex-wrap">
+                            <span className={`px-2 py-0.5 rounded-md text-xs font-semibold border ${getTypeColorClass(station.type)}`}>{getTypeLabel(station.type)}</span>
+                            <span className={`px-2 py-0.5 rounded-md text-xs font-semibold border ${getOrganizerColorClass(station.organizer)}`}>{t(`organizer.${station.organizer.toLowerCase()}` as any)}</span>
+                        </div>
+                    </div>
                         <div className="flex items-center text-gray-500 text-sm mt-0.5">
                         <MapPin size={14} className="mr-1 shrink-0"/>
                         <span className="truncate">{station.address}</span>
@@ -131,8 +159,9 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
                 </div>
             </div>
 
-            <div className="flex flex-wrap gap-2 mb-3">
-                 <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
+              <div className="flex flex-wrap gap-2 mb-3 items-center">
+                  {/* Status Badge */}
+                  <span className={`px-3 py-1 rounded-md text-xs font-bold border ${
                         station.status === SupplyStatus.AVAILABLE ? 'bg-green-100 text-green-800 border-green-200' : 
                         station.status === SupplyStatus.LOW_STOCK ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 
                         station.status === SupplyStatus.URGENT ? 'bg-red-100 text-red-800 border-red-200' :
@@ -213,12 +242,27 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
                                     <Phone size={16}/>
                                 </a>
                             )}
+                            {station.contactLink && station.contactLink.trim() && (
+                                <a
+                                    href={station.contactLink}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition"
+                                    aria-label={t('btn.contact')}
+                                    title={t('btn.contact')}
+                                >
+                                    <ExternalLink size={16} />
+                                </a>
+                            )}
                             <a
                                 href={station.mapLink || `https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lng}`}
                         target="_blank"
                         rel="noreferrer"
                         onClick={(e) => e.stopPropagation()}
                         className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-blue-500 transition"
+                        aria-label={t('btn.directions')}
+                        title={t('btn.directions')}
                      >
                          <Navigation size={16}/>
                      </a>

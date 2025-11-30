@@ -228,13 +228,13 @@ export const MeView: React.FC<Props> = ({ userLocation, onSetLocation }) => {
               onClick={() => { setConfirmConfig({ title: t('me.switch_guest_resident'), message: t('confirm.guest_switch_resident'), onConfirm: () => { setPreLoginRole(UserRole.RESIDENT); showToast('Now viewing as Resident (guest)', 'info'); setIsConfirmOpen(false); } }); setIsConfirmOpen(true); }}
               className={`px-4 py-2 rounded-full text-sm ${currentRole === UserRole.RESIDENT ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
             >
-              {t('role.resident')}
+              {t('nav.resident')}
             </button>
             <button
               onClick={() => { setConfirmConfig({ title: t('me.switch_guest_volunteer'), message: t('confirm.guest_switch_volunteer'), onConfirm: () => { setPreLoginRole(UserRole.VOLUNTEER); showToast('Now viewing as Volunteer (guest)', 'info'); setIsConfirmOpen(false); } }); setIsConfirmOpen(true); }}
               className={`px-4 py-2 rounded-full text-sm ${currentRole === UserRole.VOLUNTEER ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'}`}
             >
-              {t('role.volunteer')}
+              {t('nav.volunteer')}
             </button>
           </div>
         )}
@@ -271,7 +271,7 @@ export const MeView: React.FC<Props> = ({ userLocation, onSetLocation }) => {
                             className="px-4 py-2 rounded-full text-sm bg-gray-100 hover:bg-gray-200"
                             disabled={isSwitchingRole}
             >
-              {user.role === UserRole.RESIDENT ? `Switch to ${t('role.volunteer')}` : `Switch to ${t('role.resident')}`}
+              {user.role === UserRole.RESIDENT ? `Switch to ${t('nav.volunteer')}` : `Switch to ${t('nav.resident')}`}
             </button>
           </div>
         )}

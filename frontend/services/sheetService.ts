@@ -309,7 +309,7 @@ export async function fetchSheetData(): Promise<Station[]> {
           }
         }
       }
-      if ((import.meta as any).env && (import.meta as any).env.MODE !== 'production') console.debug(`- Offerings for ${name}:`, offerings);
+      // Do not dump offering details to console (verbosity reduced)
 
       // Volunteers at the end, but for now skip
 
@@ -317,6 +317,7 @@ export async function fetchSheetData(): Promise<Station[]> {
         id: staticData.id,
         // Prefer static canonical displayName when available
         name: staticData.displayName || name,
+        name_en: staticData.name_en || undefined,
         address: staticData.address,
         lat: staticData.lat,
         lng: staticData.lng,
@@ -330,6 +331,8 @@ export async function fetchSheetData(): Promise<Station[]> {
         upvotes: 0,
         downvotes: 0,
         ...(staticData.contactNumber ? { contactNumber: staticData.contactNumber } : {}),
+        ...(staticData.contactLink ? { contactLink: staticData.contactLink } : {}),
+        ...(staticData.mapLink ? { mapLink: staticData.mapLink } : {}),
         remarks: staticData.remarks,
       };
 
@@ -358,11 +361,7 @@ export async function debugPrintStations() {
     // Print offerings detail
     stations.forEach(s => {
       console.group(`Station: ${s.id} ${s.name}`);
-      if (s.offerings && s.offerings.length) {
-        if ((import.meta as any).env && (import.meta as any).env.MODE !== 'production') s.offerings.forEach(off => console.debug(`${off.item} — ${off.status}`));
-      } else {
-        if ((import.meta as any).env && (import.meta as any).env.MODE !== 'production') console.debug('No offerings');
-      }
+      // Offerings summary no longer printed to console for privacy and noise reduction
       console.groupEnd();
     });
     console.groupEnd();

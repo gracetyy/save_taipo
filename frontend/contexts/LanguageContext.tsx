@@ -129,6 +129,7 @@ const translations = {
         "me.no_saved": "You haven't saved any stations yet.",
         "btn.directions": "Directions",
         "btn.call": "Call",
+        "btn.contact": "Contact",
         "station.needs_label": "Needs",
         "station.remarks_label": "Remarks",
         "station.offerings_label": "Offerings",
@@ -210,6 +211,10 @@ const translations = {
         "me.switch_guest_volunteer": "Switch to Volunteer (guest)",
         "confirm.guest_switch_resident": "Switching to Resident mode will change the app view for guests. Continue?",
         "confirm.guest_switch_volunteer": "Switching to Volunteer mode will change the app view for guests. Continue?",
+        "organizer.gov": "Government",
+        "organizer.ngo": "NGO",
+        "organizer.community": "Community",
+        "filter.organizer": "Organizer",
 
         // Items
         "一般義工": "General Volunteers",
@@ -321,7 +326,7 @@ const translations = {
     },
     zh: {
         "welcome_title": "大埔救急",
-        "welcome_subtitle": "一個針對為受大埔宏福苑火災影響嘅街坊同救援義工而設嘅即時資訊整合平台，確保每分民間力量都用得其所",
+        "welcome_subtitle": "一個為大埔宏福苑五級火災緊急救援同整合物資狀態而設嘅平臺，確保每份民間力量都用得其所",
         "welcome_resident_title": "你好",
         "resident_points": "你可以用呢個app去搵最近嘅物資站同庇護中心，亦可以filter自己需要嘅資源類型（例如保暖物資、食物、尿袋、寵物支援）。\n你亦都可以睇到整理好嘅links同求助資訊。",
         "welcome_volunteer_title": "你好",
@@ -421,6 +426,10 @@ const translations = {
         "me.switch_guest_volunteer": "切換到義工（訪客）",
         "confirm.guest_switch_resident": "切換到居民模式會更改訪客畫面，繼續？",
         "confirm.guest_switch_volunteer": "切換到義工模式會更改訪客畫面，繼續？",
+        "organizer.gov": "政府",
+        "organizer.ngo": "非政府組織",
+        "organizer.community": "社區",
+        "filter.organizer": "主辦單位",
         "station.managed_station_id": "管理的物資站 ID",
         "btn.signout": "登出",
         "me.login_desc": "登入以儲存我的最愛和貢獻。",
@@ -446,6 +455,7 @@ const translations = {
         "station.login_to_view": "請登入以查看您的物資站。",
         "station.edit_station": "編輯物資站",
         "btn.call": "致電",
+        "btn.contact": "聯絡",
         "btn.save": "儲存",
         "station.name": "物資站名稱",
         "station.address_location": "地址和位置",
@@ -463,7 +473,7 @@ const translations = {
         "station.create_station_prompt": "建立一個新物資站以開始。",
         "links.tg_title": "Telegram 群組",
         "links.web_title": "網站",
-        "type.supply": "物資",
+        "type.supply": "物資站",
         "type.shelter": "住宿/庇護",
         "type.closed": "已清場",
         "type.pet_shelter": "寵物庇護所",
@@ -482,7 +492,7 @@ const translations = {
         "BABY_CARE": "嬰兒用品",
         "PET_SUPPLIES": "寵物用品",
         "ELECTRONICS": "電子產品",
-        "SHELTER": "庇護所",
+        "SHELTER": "住宿/庇護",
         "SERVICES": "服務",
         "favorite.update_failed": "更新我的最愛失敗",
         "volunteer.data_load_error": "載入志願者資料失敗",
@@ -645,13 +655,13 @@ export const LanguageProvider = ({
     children: ReactNode
 }) => {
     const [language, setLanguage] = useState<Language>(() => {
-        try {
-            const saved = typeof window !== 'undefined' && localStorage.getItem('language');
-            return (saved as Language) || 'zh';
-        } catch (err) {
-            return 'zh';
-        }
-    });
+            try {
+                const saved = typeof window !== 'undefined' && localStorage.getItem('language');
+                return (saved as Language) || 'zh';
+            } catch (err) {
+                return 'zh';
+            }
+        });
 
     const t = (key: keyof typeof translations.en) => {
         // Safe access across both languages – fall back to English if key is missing in selected language
@@ -681,7 +691,7 @@ export const LanguageProvider = ({
         const handler = (ev: any) => {
             const lang = ev?.detail;
             if (lang && (lang === 'en' || lang === 'zh')) {
-                setLang(lang);
+                setLang(lang as Language);
             }
         };
         window.addEventListener('languageChanged', handler);

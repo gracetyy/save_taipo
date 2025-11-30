@@ -253,7 +253,7 @@ export const MainLayout = () => {
                              className={({ isActive }) => `flex flex-col items-center justify-center w-full h-full space-y-1 ${isActive ? 'text-primary' : 'text-gray-400 hover:text-gray-600'}`}
                          >
                              {link.icon}
-                             <span className="text-[10px] font-medium">{link.label}</span>
+                                 <span className="sr-only">{link.label}</span>
                          </NavLink>
                      ))}
                  </div>

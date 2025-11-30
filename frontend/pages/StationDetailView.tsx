@@ -8,7 +8,7 @@ import { getStation, verifyStation, getUserVote, isFavorite, toggleFavorite, del
 import { Station, UserRole, SupplyStatus, CrowdStatus, OFFERING_CATEGORIES } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { MapPin, ArrowLeft, Heart, ThumbsUp, ThumbsDown, ShieldCheck, Clock, Users, Navigation, Share2, Plus, Edit2, CheckCircle, AlertTriangle, Phone } from 'lucide-react';
+import { MapPin, ArrowLeft, Heart, ThumbsUp, ThumbsDown, ShieldCheck, Clock, Users, Navigation, Share2, Plus, Edit2, CheckCircle, AlertTriangle, Phone, ExternalLink } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 import { CategorySelector } from '../components/CategorySelector';
 import { EditStationModal } from '../components/EditStationModal';
@@ -21,7 +21,7 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { t } = useLanguage();
+    const { t, language } = useLanguage();
   const { showToast } = useToast();
 
   const [station, setStation] = useState<Station | null>(null);
@@ -102,8 +102,9 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
   }, [station]);
 
 
-  const handleVote = async (type: 'UP' | 'DOWN') => {
-    if (!user || !station) return;
+    const handleVote = async (type: 'UP' | 'DOWN') => {
+        if (!user) { showToast(t('auth.login_required'), 'error'); return; }
+        if (!station) return;
     try {
         // Optimistic update
         const previousVote = userVote;
@@ -119,7 +120,8 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
   };
 
   const handleToggleFavorite = async () => {
-      if (!user || !station) return;
+      if (!user) { showToast(t('auth.login_required'), 'error'); return; }
+      if (!station) return;
       try {
           const newStatus = await toggleFavorite(user.id, station.id);
           setIsFav(newStatus);
@@ -145,6 +147,10 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
           default: return 'status.available';
       }
   };
+
+    const getTypeLabel = (typeKey: any) => {
+            try { return t(`type.${String(typeKey).toLowerCase()}` as any) || String(typeKey); } catch (e) { return String(typeKey); }
+    }
 
   if (isLoading) return <div className="flex justify-center items-center h-screen"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div></div>;
   if (!station) return <div className="p-8 text-center text-gray-500">Station not found</div>;
@@ -195,8 +201,15 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
       <div className="bg-white -mt-6 rounded-t-3xl relative z-10 px-6 py-8 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
           {/* Title & Status */}
           <div className="mb-6">
-              <div className="flex justify-between items-start">
-                  <h1 className="text-2xl font-bold text-gray-900 mb-2">{station.name}</h1>
+                  <div className="flex justify-between items-start">
+                      <div className="flex items-start justify-between gap-2">
+                          <h1 className="text-2xl font-bold text-gray-900 mb-2 flex-1">{(language === 'en' && station.name_en && station.name_en.trim().length > 0) ? station.name_en : station.name}</h1>
+                          <div className="flex flex-wrap gap-2 items-center">
+                              <span className={`px-3 py-1 rounded-md text-xs font-semibold border bg-gray-50 text-gray-700`}>{getTypeLabel(station.type)}</span>
+                              <span className={`px-3 py-1 rounded-md text-xs font-semibold border ${station.status === SupplyStatus.AVAILABLE ? 'bg-green-100 text-green-800 border-green-200' : station.status === SupplyStatus.LOW_STOCK ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : station.status === SupplyStatus.URGENT ? 'bg-red-100 text-red-800 border-red-200' : station.status === SupplyStatus.NO_DATA ? 'bg-gray-100 text-gray-800 border-gray-200' : station.status === SupplyStatus.GOV_CONTROL ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-purple-100 text-purple-800 border-purple-200' }`}>{t(getStatusTranslationKey(station.status))}</span>
+                              <span className="px-3 py-1 rounded-md text-xs font-semibold border bg-gray-50 text-gray-700">{t(`organizer.${station.organizer.toLowerCase()}` as any)}</span>
+                          </div>
+                      </div>
                   {station.verification?.isVerified && (
                       <ShieldCheck size={24} className="text-blue-500" />
                   )}
@@ -231,23 +244,36 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
 
           {/* Action Buttons */}
                     <div className="grid grid-cols-2 gap-4 mb-8">
-                            <div className="flex gap-2">
-                                <a 
-                                    href={station.mapLink || `https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lng}`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center justify-center bg-primary text-white py-3 rounded-xl font-bold shadow-lg shadow-teal-100 hover:bg-teal-700 transition"
-              >
-                  <Navigation size={18} className="mr-2"/> {t('btn.directions')}
-              </a>
+                              <div className="flex gap-2">
+                                                <a 
+                                                    href={station.mapLink || `https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lng}`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex items-center justify-center bg-primary text-white py-3 px-4 rounded-xl font-bold shadow-lg shadow-teal-100 hover:bg-teal-700 transition"
+                                aria-label={t('btn.directions')}
+                              >
+                                  <Navigation size={18} />
+                              </a>
                                 {station.contactNumber && station.contactNumber.trim() && (
                                         <a
                                                 href={`tel:${station.contactNumber.replace(/\s+/g, '')}`}
                                                     className="flex items-center justify-center bg-white border border-gray-200 text-gray-700 py-3 px-4 rounded-xl font-bold hover:bg-gray-50"
                                                     aria-label={t('btn.call')}
                                         >
-                                                    <Phone size={18} className="mr-2"/> {t('btn.call')}
+                                                    <Phone size={18} />
                                         </a>
+                                )}
+                                {station.contactLink && station.contactLink.trim() && (
+                                    <a
+                                        href={station.contactLink}
+                                            className="flex items-center justify-center bg-white border border-gray-200 text-gray-700 py-3 px-4 rounded-xl font-bold hover:bg-gray-50"
+                                            target="_blank"
+                                            rel="noreferrer"
+                                                    aria-label={t('btn.contact')}
+                                                    title={t('btn.contact')}
+                                    >
+                                            <ExternalLink size={18} />
+                                    </a>
                                 )}
                             </div>
                             <div className="flex bg-gray-100 rounded-xl p-1">

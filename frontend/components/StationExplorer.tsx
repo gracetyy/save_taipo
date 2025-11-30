@@ -19,7 +19,7 @@ interface StationExplorerProps {
 }
 
 export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, mode = 'RESIDENT' }) => {
-  const { t } = useLanguage();
+    const { t, language } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [stations, setStations] = useState<Station[]>([]);
@@ -28,8 +28,10 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
   const [activeType, setActiveType] = useState<StationType | 'ALL'>('ALL');
   const [searchQuery, setSearchQuery] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
-  const [itemFilterOpen, setItemFilterOpen] = useState(false);
+    const [itemFilterOpen, setItemFilterOpen] = useState(false);
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+    const [selectedStatuses, setSelectedStatuses] = useState<SupplyStatus[]>([]);
+    const [selectedOrganizers, setSelectedOrganizers] = useState<string[]>([]);
   const [sortBy, setSortBy] = useState<'STATUS' | 'DISTANCE'>('STATUS');
   const [showTraffic, setShowTraffic] = useState(false);
 
@@ -96,7 +98,7 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
           if (!hasItem) return false;
       }
 
-      // Search Filter
+    // Search Filter
       if (searchQuery) {
           const q = searchQuery.toLowerCase();
           const matchesName = s.name.toLowerCase().includes(q);
@@ -106,6 +108,11 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
           return matchesName || matchesAddress || matchesOfferings;
       }
       
+      // Status Filter
+      if (selectedStatuses.length > 0 && !selectedStatuses.includes(s.status)) return false;
+
+      // Organizer Filter
+      if (selectedOrganizers.length > 0 && !selectedOrganizers.includes(s.organizer)) return false;
       return true;
     }).sort((a, b) => {
         if (sortBy === 'DISTANCE' && userLocation) {
@@ -119,7 +126,7 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
         if (b.status === SupplyStatus.AVAILABLE && a.status !== SupplyStatus.AVAILABLE) return 1;
         return 0;
     });
-  }, [stations, activeType, searchQuery, selectedItems, sortBy, userLocation]);
+    }, [stations, activeType, searchQuery, selectedItems, sortBy, userLocation, selectedStatuses, selectedOrganizers]);
 
   // Leaflet Map Initialization and Update
   useEffect(() => {
@@ -224,8 +231,9 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
                   opacity: 1
               }).addTo(map);
               
+              const displayName = (language === 'en' && s.name_en && s.name_en.trim().length > 0) ? s.name_en : s.name;
               // Bind Tooltip (Label) - only visible when zoomed in
-              marker.bindTooltip(s.name, {
+              marker.bindTooltip(displayName, {
                   permanent: true,
                   direction: 'bottom',
                   className: 'station-label-tooltip',
@@ -236,15 +244,24 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
               const popupContent = `
                 <div onclick="window.stationNavigate('${s.id}')" role="button" tabindex="0" style="cursor: pointer; text-decoration: none; color: inherit; display: block; font-family: sans-serif;">
                     <div style="background: ${color}; height: 4px; width: 100%; border-top-left-radius: 8px; border-top-right-radius: 8px;"></div>
-                    <div style="padding: 12px;">
+                        <div style="padding: 12px;">
                         <div style="display:inline-block; font-size: 10px; font-weight: bold; color: ${color}; border: 1px solid ${color}; padding: 1px 6px; border-radius: 12px; margin-bottom: 6px;">${statusText}</div>
-                        <h3 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #202124;">${s.name}</h3>
+                        <div style="margin-top:6px; display:inline-block; margin-right:6px; font-size: 11px; background:${getTypeColorHex(s.type).bg}; padding:6px 10px; border-radius:8px; border:1px solid ${getTypeColorHex(s.type).border}; color:${getTypeColorHex(s.type).text};">${getTypeLabel(s.type)}</div>
+                        <div style="display:inline-block; font-size: 11px; background:${getOrganizerColorHex(s.organizer).bg}; padding:6px 10px; border-radius:8px; border:1px solid ${getOrganizerColorHex(s.organizer).border}; color:${getOrganizerColorHex(s.organizer).text};">${t(`organizer.${s.organizer.toLowerCase()}` as any)}</div>
+                        <h3 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #202124;">${displayName}</h3>
                         <p style="margin: 0; font-size: 12px; color: #5F6368; line-height: 1.4;">${s.address}</p>
                         <div style="margin-top: 8px; font-size: 11px; color: #5F6368;">
                             <strong>${t('card.offerings')}:</strong> ${ (s.offerings && s.offerings.length) ? s.offerings.map(o => o.item).join(', ') : t('card.no_info') }
                         </div>
-                        <div style="margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee; text-align: center; color: #0F766E; font-weight: bold; font-size: 11px;">
-                             ${t('res.view_details')} &rarr;
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee;">
+                            <a href="${s.mapLink || ('https://www.google.com/maps/dir/?api=1&destination=' + s.lat + ',' + s.lng)}" target="_blank" rel="noreferrer" onclick="event.stopPropagation();" style="display:inline-flex; padding:8px 10px; background:#0f766e; color:#fff; font-weight:bold; border-radius:8px; text-decoration:none;" title="${t('btn.directions')}" aria-label="${t('btn.directions')}">
+                                <svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
+                                    <title>${t('btn.directions')}</title>
+                                    <path d="M12 2L2 12l4 1 1 4 9-10 1-1-5-3z" />
+                                </svg>
+                            </a>
+                            ${s.contactLink ? `<a href="${s.contactLink}" target="_blank" rel="noreferrer" onclick="event.stopPropagation();" style="display:inline-flex; padding:8px 10px; background:#fff; color:#374151; font-weight:bold; border-radius:8px; text-decoration:none; border:1px solid #eee; margin-right:8px;" title="${t('btn.contact')}" aria-label="${t('btn.contact')}"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d=\"M10 2L14 6M6 10L10 14M10 14l4 4\"/></svg></a>` : ''}
+                            <div style="text-align:center; color: #0F766E; font-weight: bold; font-size: 11px;">${t('res.view_details')} &rarr;</div>
                         </div>
                     </div>
                 </div>
@@ -270,6 +287,69 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
     const key = `type.${typeKey.toLowerCase()}`;
     return t(key as any);
   }
+    const getTypeColorClass = (typeKey: string) => {
+        switch (typeKey) {
+            case 'SUPPLY': return 'bg-teal-50 text-teal-700 border-teal-100';
+            case 'SHELTER': return 'bg-indigo-50 text-indigo-700 border-indigo-100';
+            case 'PET_SHELTER': return 'bg-pink-50 text-pink-700 border-pink-100';
+            case 'FOOD_DISTRIBUTION': return 'bg-amber-50 text-amber-700 border-amber-100';
+            case 'MEDICAL': return 'bg-red-50 text-red-700 border-red-100';
+            case 'COLLECTION_POINT': return 'bg-violet-50 text-violet-700 border-violet-100';
+            default: return 'bg-gray-50 text-gray-700 border-gray-100';
+        }
+    }
+    const getStatusColorClass = (status: SupplyStatus) => {
+        switch (status) {
+            case SupplyStatus.AVAILABLE: return 'bg-green-50 text-green-700 border-green-100';
+            case SupplyStatus.LOW_STOCK: return 'bg-yellow-50 text-yellow-700 border-yellow-100';
+            case SupplyStatus.URGENT: return 'bg-red-50 text-red-700 border-red-100';
+            case SupplyStatus.NO_DATA: return 'bg-gray-50 text-gray-700 border-gray-100';
+            case SupplyStatus.GOV_CONTROL: return 'bg-blue-50 text-blue-700 border-blue-100';
+            case SupplyStatus.PAUSED: return 'bg-purple-50 text-purple-700 border-purple-100';
+            default: return 'bg-gray-50 text-gray-700 border-gray-100';
+        }
+    }
+    const getOrganizerColorClass = (org: string) => {
+        switch (org) {
+            case 'GOV': return 'bg-blue-50 text-blue-700 border-blue-100';
+            case 'NGO': return 'bg-purple-50 text-purple-700 border-purple-100';
+            case 'COMMUNITY': return 'bg-gray-50 text-gray-700 border-gray-100';
+            default: return 'bg-gray-50 text-gray-700 border-gray-100';
+        }
+    }
+    // get hex colors for inline badges used in popups
+    const getTypeColorHex = (typeKey: string) => {
+        switch (typeKey) {
+            case 'SUPPLY': return { bg: '#ecfdf5', text: '#065f46', border: '#bbf7d0' };
+            case 'SHELTER': return { bg: '#eef2ff', text: '#3730a3', border: '#c7d2fe' };
+            case 'PET_SHELTER': return { bg: '#fff1f2', text: '#be123c', border: '#fecaca' };
+            case 'FOOD_DISTRIBUTION': return { bg: '#fffbeb', text: '#92400e', border: '#fde68a' };
+            case 'MEDICAL': return { bg: '#fff1f2', text: '#b91c1c', border: '#fecaca' };
+            case 'COLLECTION_POINT': return { bg: '#f5f3ff', text: '#6d28d9', border: '#ede9fe' };
+            default: return { bg: '#f8fafc', text: '#374151', border: '#e5e7eb' };
+        }
+    }
+    const getOrganizerColorHex = (org: string) => {
+        switch (org) {
+            case 'GOV': return { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe' };
+            case 'NGO': return { bg: '#faf5ff', text: '#6b21a8', border: '#f3e8ff' };
+            case 'COMMUNITY': return { bg: '#f8fafc', text: '#374151', border: '#e5e7eb' };
+            default: return { bg: '#f8fafc', text: '#374151', border: '#e5e7eb' };
+        }
+    }
+    
+
+    const getStatusTranslationKey = (status: SupplyStatus) => {
+        switch (status) {
+            case SupplyStatus.AVAILABLE: return 'status.available';
+            case SupplyStatus.LOW_STOCK: return 'status.low_stock';
+            case SupplyStatus.URGENT: return 'status.urgent';
+            case SupplyStatus.NO_DATA: return 'status.no_data';
+            case SupplyStatus.GOV_CONTROL: return 'status.gov_control';
+            case SupplyStatus.PAUSED: return 'status.paused';
+            default: return 'status.available';
+        }
+    };
 
     // Ensure the map invalidates size when height changes
     useEffect(() => {
@@ -351,24 +431,24 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
          {/* Secondary Filters Bar */}
          <div className="flex justify-between items-center mt-1">
              <div className="flex space-x-2 overflow-x-auto no-scrollbar">
-                 {/* Feature Toggle */}
-                 <button onClick={() => setFilterOpen(!filterOpen)} className="whitespace-nowrap text-xs font-bold text-gray-600 flex items-center bg-gray-100 px-3 py-1.5 rounded-lg hover:bg-gray-200">
-                     <Filter size={12} className="mr-1"/> {t('res.more_filters')} {filterOpen ? '▲' : '▼'}
-                 </button>
-
                  {/* Item/Offering Filter */}
-                 <button 
-                    onClick={() => setItemFilterOpen(true)}
-                    className={`whitespace-nowrap text-xs font-bold flex items-center px-3 py-1.5 rounded-lg transition ${selectedItems.length > 0 ? 'bg-secondary text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
-                 >
+                      <button 
+                          onClick={() => setItemFilterOpen(true)}
+                          className={`whitespace-nowrap text-xs font-bold flex items-center px-2 py-1 rounded-md transition ${selectedItems.length > 0 ? 'bg-secondary text-white shadow-sm' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'}`}
+                      >
                      <PackageOpen size={14} className="mr-1.5"/> 
                      {selectedItems.length > 0 ? `${t('btn.filter_items')} (${selectedItems.length})` : t('btn.filter_items')}
                  </button>
 
+                 {/* Feature Toggle */}
+                 <button onClick={() => setFilterOpen(!filterOpen)} className="whitespace-nowrap text-xs font-bold text-gray-600 flex items-center bg-gray-100 px-2 py-1 rounded-md hover:bg-gray-200">
+                     <Filter size={12} className="mr-1"/> {t('res.more_filters')} {filterOpen ? '▲' : '▼'}
+                 </button>
+
                  {/* Sorting */}
-                 <button 
-                    onClick={() => setSortBy(sortBy === 'STATUS' ? 'DISTANCE' : 'STATUS')}
-                    className="whitespace-nowrap text-xs font-bold text-gray-600 flex items-center bg-gray-100 px-3 py-1.5 rounded-lg hover:bg-gray-200"
+                      <button 
+                          onClick={() => setSortBy(sortBy === 'STATUS' ? 'DISTANCE' : 'STATUS')}
+                          className="whitespace-nowrap text-xs font-bold text-gray-600 flex items-center bg-gray-100 px-2 py-1 rounded-md hover:bg-gray-200"
                     disabled={!userLocation && sortBy === 'STATUS'}
                  >
                      <ArrowUpDown size={14} className="mr-1.5"/>
@@ -377,9 +457,9 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
              </div>
              
              {/* Reset Button */}
-             <button 
-                onClick={handleReset} 
-                className="ml-2 px-3 py-1.5 text-xs font-bold text-gray-500 hover:text-red-600 hover:bg-red-50 bg-gray-100 rounded-lg transition flex items-center whitespace-nowrap" 
+                 <button 
+                     onClick={handleReset} 
+                     className="ml-2 px-2 py-1 text-xs font-bold text-gray-500 hover:text-red-600 hover:bg-red-50 bg-gray-100 rounded-md transition flex items-center whitespace-nowrap" 
                 title={t('btn.reset')}
              >
                  <RotateCcw size={14} className="mr-1.5" />
@@ -388,7 +468,27 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
          </div>
 
          {filterOpen && (
-             <div className="mt-2 bg-white p-3 rounded-lg border shadow-sm flex gap-3 flex-wrap animate-in slide-in-from-top-2">
+             <div className="mt-2 bg-white p-2 rounded-lg border shadow-sm flex gap-2 flex-wrap animate-in slide-in-from-top-2">
+                 <div className="flex items-center gap-2 mr-4">
+                     <div className="text-xs font-medium mr-2">{t('sort.status')}</div>
+                     {Object.values(SupplyStatus).map((s) => (
+                         <button
+                            key={s}
+                            onClick={() => setSelectedStatuses(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])}
+                            className={`px-2 py-0.5 text-xs rounded border ${selectedStatuses.includes(s) ? getStatusColorClass(s as SupplyStatus) : 'bg-gray-100 text-gray-700'}`}
+                         >{t(getStatusTranslationKey(s as SupplyStatus))}</button>
+                     ))}
+                 </div>
+                 <div className="flex items-center gap-2">
+                     <div className="text-xs font-medium mr-2">{t('filter.organizer')}</div>
+                     {['GOV', 'NGO', 'COMMUNITY'].map(org => (
+                         <button
+                             key={org}
+                             onClick={() => setSelectedOrganizers(prev => prev.includes(org) ? prev.filter(x => x !== org) : [...prev, org])}
+                            className={`px-2 py-0.5 text-xs rounded border ${selectedOrganizers.includes(org) ? getOrganizerColorClass(org) : 'bg-gray-100 text-gray-700'}`}
+                         >{t(`organizer.${org.toLowerCase()}` as any)}</button>
+                     ))}
+                 </div>
              </div>
          )}
       </div>
