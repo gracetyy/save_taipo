@@ -80,7 +80,7 @@ export const UsefulLinksView = () => {
                         <MessageCircle size={16} className="mr-2" />
                         {t('links.tg_title')}
                     </h2>
-                    <div className="grid gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                         {tgGroups.map((group, idx) => (
                             <a 
                                 key={idx} 
@@ -107,7 +107,7 @@ export const UsefulLinksView = () => {
                         <Globe size={16} className="mr-2" />
                         {t('links.web_title')}
                     </h2>
-                    <div className="grid gap-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
                          {websites.map((site, idx) => (
                             <a 
                                 key={idx} 

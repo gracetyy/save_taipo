@@ -63,6 +63,24 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
     }
   }, [user]);
 
+    // Remove redundant page <h1> that may be injected by layout (e.g., nav.resident) above the search header
+    useEffect(() => {
+        try {
+            if (headerRef.current && headerRef.current.previousElementSibling) {
+                const prev = headerRef.current.previousElementSibling as HTMLElement | null;
+                if (prev && prev.tagName === 'H1') {
+                    const text = (prev.textContent || '').trim();
+                    if (text && (text === t('nav.resident') || text === 'Resident' || text === '物資站')) {
+                        prev.remove();
+                    }
+                }
+            }
+        } catch (e) {
+            // No-op: don't fail rendering if DOM manipulation fails
+            console.warn('Failed to remove extra page title', e);
+        }
+    }, []);
+
   useEffect(() => {
     // Initial load
     refreshData();
@@ -517,9 +535,10 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
          </div>
 
          {filterOpen && (
-             <div className="mt-2 bg-white p-2 rounded-lg border shadow-sm flex gap-2 flex-wrap animate-in slide-in-from-top-2">
-                 <div className="flex items-center gap-2 mr-4">
-                     <div className="text-xs font-medium mr-2">{t('sort.status')}</div>
+             <div className="mt-2 bg-white p-4 rounded-lg border shadow-sm flex flex-col gap-4 animate-in slide-in-from-top-2">
+                 <div className="flex items-start">
+                     <div className="text-xs font-medium w-20 flex-shrink-0 pt-1">{t('sort.status')}</div>
+                     <div className="flex items-center gap-2 flex-wrap">
                          {(() => {
                              // Build an ordered list of effective statuses for the current role, de-duplicated
                              const order = [SupplyStatus.AVAILABLE, SupplyStatus.LOW_STOCK, SupplyStatus.URGENT, SupplyStatus.NO_DATA, SupplyStatus.GOV_CONTROL, SupplyStatus.PAUSED];
@@ -530,20 +549,23 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
                                  <button
                                     key={s}
                                     onClick={() => setSelectedStatuses(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])}
-                                    className={`px-2 py-0.5 text-xs rounded border ${selectedStatuses.includes(s) ? getStatusColorClass(s as SupplyStatus) : 'bg-gray-100 text-gray-700'}`}
+                                    className={`px-2 py-0.5 text-xs rounded border whitespace-nowrap ${selectedStatuses.includes(s) ? getStatusColorClass(s as SupplyStatus) : 'bg-gray-100 text-gray-700'}`}
                                  >{getRoleStatusLabel(s as SupplyStatus)}</button>
                              ));
                          })()}
+                     </div>
                  </div>
-                 <div className="flex items-center gap-2">
-                     <div className="text-xs font-medium mr-2">{t('filter.organizer')}</div>
-                     {['GOV', 'NGO', 'COMMUNITY'].map(org => (
-                         <button
-                             key={org}
-                             onClick={() => setSelectedOrganizers(prev => prev.includes(org) ? prev.filter(x => x !== org) : [...prev, org])}
-                            className={`px-2 py-0.5 text-xs rounded border ${selectedOrganizers.includes(org) ? getOrganizerColorClass(org) : 'bg-gray-100 text-gray-700'}`}
-                         >{t(`organizer.${org.toLowerCase()}` as any)}</button>
-                     ))}
+                 <div className="flex items-start">
+                     <div className="text-xs font-medium w-20 flex-shrink-0 pt-1">{t('filter.organizer')}</div>
+                     <div className="flex items-center gap-2 flex-wrap">
+                         {['GOV', 'NGO', 'COMMUNITY'].map(org => (
+                             <button
+                                 key={org}
+                                 onClick={() => setSelectedOrganizers(prev => prev.includes(org) ? prev.filter(x => x !== org) : [...prev, org])}
+                                className={`px-2 py-0.5 text-xs rounded border whitespace-nowrap ${selectedOrganizers.includes(org) ? getOrganizerColorClass(org) : 'bg-gray-100 text-gray-700'}`}
+                             >{t(`organizer.${org.toLowerCase()}` as any)}</button>
+                         ))}
+                     </div>
                  </div>
              </div>
          )}

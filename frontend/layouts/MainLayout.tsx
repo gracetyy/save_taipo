@@ -157,8 +157,8 @@ const GlobalAlertBanner = () => {
     return (
         <>
             {serverAlert && (
-                <div ref={serverContainerRef} role="status" aria-live="assertive" className="bg-red-600 text-white text-sm font-bold p-2 text-center flex items-center h-10 animate-in slide-in-from-top">
-                    <Bell size={16} className="mr-2 animate-pulse flex-shrink-0" style={{ color: '#fff' }} />
+                <div ref={serverContainerRef} role="status" aria-live="assertive" className="bg-red-100 text-red-800 text-sm font-bold p-2 text-center flex items-center h-10 animate-in slide-in-from-top">
+                    <Bell size={16} className="mr-2 animate-pulse flex-shrink-0 text-red-800" />
                     <div ref={serverTextContainerRef} className="flex-1 overflow-hidden whitespace-nowrap">
                         <span
                             ref={serverTextRef}
@@ -171,8 +171,8 @@ const GlobalAlertBanner = () => {
                 </div>
             )}
             {sheetAlert && (
-                <div ref={sheetContainerRef} role="status" aria-live="polite" className="bg-yellow-400 text-gray-900 text-sm font-bold p-2 text-center flex items-center h-10 animate-in slide-in-from-top">
-                    <Bell size={16} className="mr-2 flex-shrink-0 text-[#5A3A00]" style={{ color: '#5A3A00' }} />
+                <div ref={sheetContainerRef} role="status" aria-live="polite" className="bg-yellow-100 text-yellow-800 text-sm font-bold p-2 text-center flex items-center h-10 animate-in slide-in-from-top">
+                    <Bell size={16} className="mr-2 flex-shrink-0 text-yellow-800" />
                     <div ref={sheetTextContainerRef} className="flex-1 overflow-hidden whitespace-nowrap">
                         <span
                             ref={sheetTextRef}

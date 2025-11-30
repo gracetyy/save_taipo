@@ -42,13 +42,6 @@ export const VolunteerHub: React.FC<Props> = ({ userLocation }) => {
 
   return (
     <div className="pb-24">
-        {/* Header: only the Station view is shown for volunteers */}
-        <div className="bg-white sticky top-0 z-[1000] border-b border-gray-100 flex shadow-sm">
-            <div className="flex-1 py-3 text-sm font-bold flex items-center justify-center text-gray-500">
-                <MapPin size={16} className="mr-2"/> {t('volunteer.stations')}
-            </div>
-        </div>
-
         <ErrorBoundary>
           <StationExplorer userLocation={userLocation} mode="VOLUNTEER" />
         </ErrorBoundary>

@@ -10,6 +10,7 @@ interface Props {
 export const ResidentView: React.FC<Props> = ({ userLocation }) => {
     return (
         <div className="pb-24">
+            {/* <h1 className="text-xl font-bold p-4">{t('nav.resident')}</h1> */}
             <ErrorBoundary>
                 <StationExplorer userLocation={userLocation} mode="RESIDENT" />
             </ErrorBoundary>
