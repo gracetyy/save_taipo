@@ -21,3 +21,8 @@ export const canDrive = (role: UserRole) => role === UserRole.DRIVER || role ===
 
 export const canManageStations = (role: UserRole) => RoleHierarchy[role] >= RoleHierarchy[UserRole.STATION_MANAGER];
 export const canManageSystem = (role: UserRole) => role === UserRole.ADMIN;
+
+// Roles that require authentication to be valid (cannot be set anonymously)
+export const roleRequiresLogin = (role: UserRole) => {
+    return !(role === UserRole.RESIDENT || role === UserRole.VOLUNTEER || role === UserRole.GUEST);
+}

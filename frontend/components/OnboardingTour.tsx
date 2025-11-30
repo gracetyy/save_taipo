@@ -30,16 +30,24 @@ export const OnboardingTour: React.FC<OnboardingTourProps> = ({ onComplete }) =>
 
     useEffect(() => {
         if (!user) return;
-        const storageKey = `onboarding_completed_${user.id}_v2`;
-        const hasSeenTour = localStorage.getItem(storageKey);
+            const storageKey = `onboarding_completed_${user.id}_v2`;
+            const hasSeenTour = localStorage.getItem(storageKey);
 
-        if (!hasSeenTour) {
-            setIsVisible(true);
-            if (user.role && user.role !== UserRole.RESIDENT && user.role !== UserRole.GUEST) {
-                setSelectedRole(user.role);
-                setStep(2);
+            // If the user completed the pre-login onboarding, mark the logged-in tour as completed
+            // to avoid showing the onboarding again right after signing in.
+            const preLoginDone = localStorage.getItem('preLoginOnboardingCompleted_v1');
+            if (preLoginDone) {
+                try { localStorage.setItem(storageKey, 'true'); } catch (e) {}
+                return;
             }
-        }
+
+            if (!hasSeenTour) {
+                setIsVisible(true);
+                if (user.role && user.role !== UserRole.RESIDENT && user.role !== UserRole.GUEST) {
+                    setSelectedRole(user.role);
+                    setStep(2);
+                }
+            }
     }, [user]);
 
     const handleComplete = (coords?: { lat: number; lng: number }) => {

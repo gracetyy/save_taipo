@@ -13,6 +13,14 @@ interface AuthContextType {
   refreshUser: () => Promise<void>;
   debugLogin: (role?: UserRole, assignedStationId?: string) => void;
   isLoading: boolean;
+  // Runtime role chosen by the app for the current session (may be pre-login role)
+  currentRole: UserRole;
+  // Is the user currently logged-in (has an authenticated Firebase session)
+  isLoggedIn: boolean;
+  // The role currently used by the app for permission/UI. If logged-in, this equals user.role, else it's the pre-login role.
+  effectiveRole: UserRole;
+  // Set the pre-login role (for unauthenticated users) - allowed values: RESIDENT or VOLUNTEER
+  setPreLoginRole: (role: UserRole) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -20,6 +28,16 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
+  const [currentRole, setCurrentRole] = useState<UserRole>(() => {
+    try {
+      const r = typeof window !== 'undefined' ? (localStorage.getItem('preLoginRoleSelection_v1') as UserRole | null) : null;
+      return r && (r === UserRole.RESIDENT || r === UserRole.VOLUNTEER) ? r : UserRole.RESIDENT;
+    } catch (err) {
+      return UserRole.RESIDENT;
+    }
+  });
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean>(false);
+  const [effectiveRole, setEffectiveRole] = useState<UserRole>(() => currentRole);
   const [isLoading, setIsLoading] = useState(true);
 
   const fetchUserProfile = async (currentUser: FirebaseUser) => {
@@ -27,7 +45,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           const token = await currentUser.getIdToken();
           // Send token to backend to verify and get user profile
           const userProfile = await apiClient.post<UserProfile>('/auth/login', { token });
+          // Mark the fetched user profile as logged-in for runtime
+          userProfile.isLoggedIn = true;
           setUser(userProfile);
+          setIsLoggedIn(true);
+          setCurrentRole(userProfile.role);
         // If user has a preferred language, persist locally and notify rest of app
         try {
           if (typeof window !== 'undefined' && userProfile.prefersLanguage) {
@@ -41,10 +63,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           // ignore
         }
           localStorage.setItem('resq_user_session_v2', JSON.stringify(userProfile));
-      } catch (error) {
+        } catch (error) {
           console.error("Authentication Error:", error);
           setUser(null);
           localStorage.removeItem('resq_user_session_v2');
+          setIsLoggedIn(false);
+          // When profile fetch fails for a logged-in Firebase user, default to guest/resident
+          try {
+          const preRole = localStorage.getItem('preLoginRoleSelection_v1') as UserRole | null;
+          if (preRole && (preRole === UserRole.VOLUNTEER || preRole === UserRole.RESIDENT)) setCurrentRole(preRole);
+          else setCurrentRole(UserRole.RESIDENT);
+          } catch {}
       }
   };
 
@@ -63,9 +92,19 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             console.error("Failed to self-claim volunteer role", error);
           }
         }
+        // if we have a logged-in user, ensure currentRole reflects backend role
+        try { setCurrentRole((await apiClient.get<UserProfile>('/users/self')).role); } catch (e) {}
+        setEffectiveRole((await apiClient.get<UserProfile>('/users/self')).role);
       } else {
         setUser(null);
         localStorage.removeItem('resq_user_session_v2');
+        setIsLoggedIn(false);
+        try {
+          const r = localStorage.getItem('preLoginRoleSelection_v1') as UserRole | null;
+          if (r && (r === UserRole.RESIDENT || r === UserRole.VOLUNTEER)) setCurrentRole(r);
+          else setCurrentRole(UserRole.RESIDENT);
+          setEffectiveRole(r && (r === UserRole.RESIDENT || r === UserRole.VOLUNTEER) ? (r as UserRole) : UserRole.RESIDENT);
+        } catch {}
       }
       setIsLoading(false);
     });
@@ -98,6 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const refreshUser = async () => {
       if (firebaseUser) {
           await fetchUserProfile(firebaseUser);
+          setEffectiveRole((await apiClient.get<UserProfile>('/users/self')).role);
       }
   };
 
@@ -134,6 +174,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         notificationsEnabled: true,
     };
     setUser(mockUser);
+    setIsLoggedIn(true);
+    setEffectiveRole(role);
     localStorage.setItem('resq_user_session_v2', JSON.stringify(mockUser));
     try {
       if (typeof window !== 'undefined') {
@@ -149,7 +191,20 @@ if (import.meta.env.DEV) {
 
 
   return (
-    <AuthContext.Provider value={{ user, firebaseUser, login, logout, refreshUser, debugLogin, isLoading }}>
+  <AuthContext.Provider value={{ user, firebaseUser, login, logout, refreshUser, debugLogin, isLoading, currentRole, isLoggedIn, effectiveRole, setPreLoginRole: (r: UserRole) => {
+      // only allow RESIDENT or VOLUNTEER for pre-login roles, and only when unauthenticated
+      if (isLoggedIn) {
+        console.warn('Cannot set pre-login role while logged in');
+        return;
+      }
+      if (r === UserRole.RESIDENT || r === UserRole.VOLUNTEER) {
+        setCurrentRole(r);
+        setEffectiveRole(r);
+        try { localStorage.setItem('preLoginRoleSelection_v1', r); } catch {}
+      } else {
+        console.warn('Attempt to set pre-login role to a value requiring authentication:', r);
+      }
+    } }}>
       {children}
     </AuthContext.Provider>
   );

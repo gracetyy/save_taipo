@@ -21,17 +21,28 @@ import { ProtectedRoute } from './components/ProtectedRoute';
 const AppContent = () => {
   const [location, setLocation] = useState<{lat: number, lng: number} | null>(null);
   const [showPreLoginOnboarding, setShowPreLoginOnboarding] = useState(false);
-  const { user } = useAuth();
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
     const hasCompletedPreLoginOnboarding = localStorage.getItem('preLoginOnboardingCompleted_v1');
-    if (!hasCompletedPreLoginOnboarding) {
+    // Don't show onboarding to logged-in users (assume they have already completed it).
+    // Also don't show while auth state is loading.
+    if (!hasCompletedPreLoginOnboarding && !user && !isLoading) {
       setShowPreLoginOnboarding(true);
     }
-  }, []);
+  }, [user]);
 
+  // If user logged in while pre-login onboarding is displayed, auto-close it
+  useEffect(() => {
+    if (user && showPreLoginOnboarding) {
+      setShowPreLoginOnboarding(false);
+    }
+  }, [user, showPreLoginOnboarding]);
+
+  const { setPreLoginRole } = useAuth();
   const handleRoleSelected = (role: UserRole) => {
-    localStorage.setItem('preLoginRoleSelection_v1', role);
+    // Prefers only RESIDENT or VOLUNTEER for pre-login selection
+    setPreLoginRole(role);
   };
 
   const handleOnboardingComplete = (coords?: {lat: number, lng: number}) => {

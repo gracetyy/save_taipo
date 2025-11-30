@@ -10,21 +10,30 @@ interface ProtectedRouteProps {
 }
 
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ allowedRoles, redirectPath = '/' }) => {
-    const { user, isLoading } = useAuth();
+    const { user, isLoading, currentRole, isLoggedIn, effectiveRole } = useAuth();
 
     if (isLoading) {
         // You might want to render a loading spinner here
         return <div className="flex justify-center items-center h-screen">Loading...</div>;
     }
 
-    if (!user) {
-        return <Navigate to={redirectPath} replace />;
+    // If logged in, evaluate using user's real role from backend
+    if (isLoggedIn && user) {
+        const isAllowed = allowedRoles.some(role => hasRole(user.role, role));
+        if (!isAllowed) return <Navigate to={redirectPath} replace />;
+        return <Outlet />;
     }
 
-    const isAllowed = allowedRoles.some(role => hasRole(user.role, role));
-
-    if (!isAllowed) {
-        return <Navigate to={redirectPath} replace />;
+    // Not logged in: only allow RESIDENT or VOLUNTEER via pre-login selection
+    if (!isLoggedIn) {
+        if (!effectiveRole) return <Navigate to={redirectPath} replace />;
+        // Only RESIDENT or VOLUNTEER allowed when not authenticated
+        if (effectiveRole !== UserRole.RESIDENT && effectiveRole !== UserRole.VOLUNTEER) {
+            return <Navigate to={redirectPath} replace />;
+        }
+        const isAllowedByPreLogin = allowedRoles.includes(effectiveRole);
+        if (!isAllowedByPreLogin) return <Navigate to={redirectPath} replace />;
+        return <Outlet />;
     }
 
     return <Outlet />;

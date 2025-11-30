@@ -25,7 +25,8 @@ router.get('/:userId', authMiddleware, async (req: AuthenticatedRequest, res) =>
     }
 });
 
-// Self-update role (only for allowed roles)
+// Self-update role (only for allowed roles: resident & volunteer)
+// Drivers must request approval; admins control privileged roles
 router.post('/self-update', authMiddleware, async (req: AuthenticatedRequest, res) => {
     try {
         const userId = req.user?.uid;
@@ -34,8 +35,8 @@ router.post('/self-update', authMiddleware, async (req: AuthenticatedRequest, re
         }
         const { role } = req.body;
 
-        // Validate role - only allow specific roles for self-update
-        const allowedRoles = [UserRole.RESIDENT, UserRole.VOLUNTEER, UserRole.DRIVER];
+        // Validate role - only allow RESIDENT and VOLUNTEER for self-update
+        const allowedRoles = [UserRole.RESIDENT, UserRole.VOLUNTEER];
         if (!allowedRoles.includes(role)) {
             return res.status(400).json({ message: 'Invalid role for self-update' });
         }

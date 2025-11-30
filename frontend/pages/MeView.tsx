@@ -5,10 +5,12 @@ import { getStations, getFavoriteIds, getGlobalAlert, setGlobalAlert } from '../
 import { StationCard } from '../components/StationCard';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { apiClient } from '../services/apiClient';
 import { User, LogOut, ShieldCheck, Truck, Users, UserCircle, Bell, Save, Home, ChevronRight, MapPin } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 
 import { DriverRequestModal } from '../components/DriverRequestModal';
+import { ConfirmModal } from '../components/ConfirmModal';
 
 interface Props {
   userLocation: { lat: number; lng: number } | null;
@@ -17,13 +19,16 @@ interface Props {
 
 export const MeView: React.FC<Props> = ({ userLocation, onSetLocation }) => {
   const navigate = useNavigate();
-  const { user, logout, login, refreshUser } = useAuth();
+  const { user, logout, login, refreshUser, setPreLoginRole, currentRole, isLoggedIn } = useAuth();
   const { t } = useLanguage();
   const { showToast } = useToast();
   const [savedStations, setSavedStations] = useState<Station[]>([]);
   const [ownedStationsCount, setOwnedStationsCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isDriverRequestModalOpen, setIsDriverRequestModalOpen] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [confirmConfig, setConfirmConfig] = useState<{title?: string; message: string; onConfirm: () => void; destructive?: boolean} | null>(null);
+  const [isSwitchingRole, setIsSwitchingRole] = useState(false);
   
   // Admin Global Alert State
   const [alertText, setAlertText] = useState('');
@@ -123,6 +128,27 @@ export const MeView: React.FC<Props> = ({ userLocation, onSetLocation }) => {
           }}
         />
       )}
+      {confirmConfig && (
+        <ConfirmModal
+          open={isConfirmOpen}
+          title={confirmConfig.title}
+          message={confirmConfig.message}
+          confirmLabel="Confirm"
+          cancelLabel="Cancel"
+          destructive={confirmConfig.destructive}
+          onConfirm={() => {
+            try {
+              if (confirmConfig?.onConfirm) confirmConfig.onConfirm();
+            } catch (e) {
+              console.error('Confirm action failed', e);
+            } finally {
+              setIsConfirmOpen(false);
+              setConfirmConfig(null);
+            }
+          }}
+          onCancel={() => { setIsConfirmOpen(false); setConfirmConfig(null); }}
+        />
+      )}
       {/* Profile Section */}
       <div className="bg-white p-6 mb-2 border-b">
         <h2 className="text-2xl font-bold mb-4">{t('me.title')}</h2>
@@ -138,13 +164,15 @@ export const MeView: React.FC<Props> = ({ userLocation, onSetLocation }) => {
                 <div className="flex items-center gap-2 mt-1 mb-2">
                     {getRoleBadge(user.role)}
                     <div className="mt-2 flex gap-2">
-                      <button
-                        onClick={handleEnableLocation}
-                        className="text-sm text-blue-600 font-bold flex items-center hover:bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 transition w-fit"
-                      >
-                        <MapPin size={14} className="mr-1.5"/> {t('btn.directions')}
-                      </button>
-                    </div>
+                          <button
+                            onClick={handleEnableLocation}
+                            className="text-sm text-blue-600 font-bold flex items-center hover:bg-blue-50 px-3 py-1.5 rounded-full border border-blue-100 transition w-fit"
+                          >
+                            <MapPin size={14} className="mr-1.5"/> {t('onboarding.location_allow')}
+                            </button>
+                        </div>
+
+                        {/* Role buttons moved below the profile for layout clarity */}
                 </div>
                 <p className="text-gray-500 text-sm mb-2">{user.email}</p>
                 {user.role !== UserRole.DRIVER && user.role !== UserRole.ADMIN && (
@@ -187,6 +215,65 @@ export const MeView: React.FC<Props> = ({ userLocation, onSetLocation }) => {
                   </button>
                 </div>
             </div>
+        )}
+      </div>
+
+      {/* Role Switch Card - below profile */}
+      <div className="p-4 bg-white border-b mb-2">
+        <h3 className="font-bold text-gray-800 text-lg mb-3">{t('me.switch_role')}</h3>
+        {/* Guest pre-login role selection */}
+        {!isLoggedIn && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => { setConfirmConfig({ title: t('me.switch_guest_resident'), message: t('confirm.guest_switch_resident'), onConfirm: () => { setPreLoginRole(UserRole.RESIDENT); showToast('Now viewing as Resident (guest)', 'info'); setIsConfirmOpen(false); } }); setIsConfirmOpen(true); }}
+              className={`px-4 py-2 rounded-full text-sm ${currentRole === UserRole.RESIDENT ? 'bg-blue-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+            >
+              {t('role.resident')}
+            </button>
+            <button
+              onClick={() => { setConfirmConfig({ title: t('me.switch_guest_volunteer'), message: t('confirm.guest_switch_volunteer'), onConfirm: () => { setPreLoginRole(UserRole.VOLUNTEER); showToast('Now viewing as Volunteer (guest)', 'info'); setIsConfirmOpen(false); } }); setIsConfirmOpen(true); }}
+              className={`px-4 py-2 rounded-full text-sm ${currentRole === UserRole.VOLUNTEER ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700'}`}
+            >
+              {t('role.volunteer')}
+            </button>
+          </div>
+        )}
+
+        {/* Role switcher for authenticated users (RESIDENT / VOLUNTEER) */}
+        {isLoggedIn && user && (user.role === UserRole.RESIDENT || user.role === UserRole.VOLUNTEER) && (
+          <div className="flex gap-2">
+            <button
+              onClick={async () => {
+                const otherRole = user.role === UserRole.RESIDENT ? UserRole.VOLUNTEER : UserRole.RESIDENT;
+                  setConfirmConfig({
+                  title: `Switch role to ${otherRole}`,
+                  message: `Switching to ${otherRole} will update your account role and may change accessible features. Continue?`,
+                  destructive: false,
+                  onConfirm: async () => {
+                                  setIsSwitchingRole(true);
+                                  try {
+                                    await apiClient.post('/roles/self-update', { role: otherRole });
+                                    // clear any pre-login role selection stored in localStorage (avoid confusion)
+                                    try { localStorage.removeItem('preLoginRoleSelection_v1'); } catch (e) {}
+                                    await refreshUser();
+                                    showToast('Role updated', 'success');
+                                  } catch (err) {
+                                    console.error('Failed to change role', err);
+                                    showToast('Failed to update role', 'error');
+                                  } finally {
+                                    setIsConfirmOpen(false);
+                                    setIsSwitchingRole(false);
+                                  }
+                  }
+                });
+                setIsConfirmOpen(true);
+              }}
+                            className="px-4 py-2 rounded-full text-sm bg-gray-100 hover:bg-gray-200"
+                            disabled={isSwitchingRole}
+            >
+              {user.role === UserRole.RESIDENT ? `Switch to ${t('role.volunteer')}` : `Switch to ${t('role.resident')}`}
+            </button>
+          </div>
         )}
       </div>
 
@@ -252,7 +339,8 @@ export const MeView: React.FC<Props> = ({ userLocation, onSetLocation }) => {
           </div>
       )}
 
-      {/* Saved List */}
+      {/* Saved List - only show for logged-in users */}
+      {user && (
       <div className="p-4">
           <h3 className="font-bold text-gray-800 text-lg mb-3 flex items-center">
              {t('me.saved_stations')}
@@ -280,6 +368,7 @@ export const MeView: React.FC<Props> = ({ userLocation, onSetLocation }) => {
               </div>
           )}
       </div>
+      )}
     </div>
   );
 };

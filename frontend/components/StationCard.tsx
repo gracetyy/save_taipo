@@ -24,8 +24,10 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
     const [isFav, setIsFav] = useState(false);
     const [showEditModal, setShowEditModal] = useState(false);
     const [distance, setDistance] = useState<string | null>(null);
-    // Debug: log offerings length to verify they are present
-    // console.log('StationCard', station.id, 'offerings', station.offerings?.length);
+    // Debug logs are not shown in production.
+    if (import.meta.env.DEV) {
+        console.debug('StationCard (dev):', station.id, 'offerings', station.offerings?.length);
+    }
 
     useEffect(() => {
         if (user) {

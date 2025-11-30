@@ -2,14 +2,18 @@ import React, { useMemo } from 'react';
 import { NavLink, Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useToast } from '../contexts/ToastContext';
+import { apiClient } from '../services/apiClient';
 import { UserRole } from '../types';
 import { Map, Link, User, Home, HandHeart, Truck, Shield, LogOut, Zap, Globe, Bell, Users } from 'lucide-react';
 import { getGlobalAlert } from '../services/dataService';
+import { fetchSheetData, getSheetGlobalAlert } from '../services/sheetService';
 import { useState, useEffect } from 'react';
 
 const TopBar = () => {
-    const { user, login, logout } = useAuth();
-    const { language, setLanguage } = useLanguage();
+    const { user, login, logout, currentRole, isLoggedIn, setPreLoginRole, effectiveRole, refreshUser } = useAuth();
+    const { language, setLanguage, t } = useLanguage();
+    const { showToast } = useToast();
 
     return (
         <div className="bg-white px-4 py-3 flex justify-between items-center shadow-sm z-[1100] relative">
@@ -22,7 +26,7 @@ const TopBar = () => {
                     <span>{language === 'zh' ? 'EN / 中' : '中 / EN'}</span>
                 </button>
              </div>
-             <div>
+                 <div className="flex items-center gap-3">
                 {user ? (
                     <div className="flex items-center space-x-3">
                         {user.role === UserRole.ADMIN && (
@@ -59,44 +63,140 @@ const TopBar = () => {
                         </button>
                     </div>
                 )}
+                {/* Role switching is handled in the MeView profile page now */}
              </div>
         </div>
     );
 }
 
 const GlobalAlertBanner = () => {
-    const [alertMsg, setAlertMsg] = useState<string | null>(null);
+    const [serverAlert, setServerAlert] = useState<string | null>(null);
+    const [sheetAlert, setSheetAlert] = useState<string | null>(null);
+    const { user, currentRole, isLoggedIn, effectiveRole } = useAuth();
+
+    // Refs and state for scrolling behavior
+    const serverContainerRef = React.useRef<HTMLDivElement | null>(null);
+    const serverTextRef = React.useRef<HTMLSpanElement | null>(null);
+    const sheetContainerRef = React.useRef<HTMLDivElement | null>(null);
+    const sheetTextRef = React.useRef<HTMLSpanElement | null>(null);
+    const [serverScrolling, setServerScrolling] = useState(false);
+    const [serverDuration, setServerDuration] = useState(10);
+    const [sheetScrolling, setSheetScrolling] = useState(false);
+    const [sheetDuration, setSheetDuration] = useState(10);
+    // gap in px between end of message and next loop
+    const [serverGap, setServerGap] = useState(80);
+    const [sheetGap, setSheetGap] = useState(80);
+    const serverTextContainerRef = React.useRef<HTMLDivElement | null>(null);
+    const sheetTextContainerRef = React.useRef<HTMLDivElement | null>(null);
 
     useEffect(() => {
-        const fetchAlert = async () => {
-            const msg = await getGlobalAlert();
-            setAlertMsg(msg);
+        const fetchAlerts = async () => {
+            const srv = await getGlobalAlert();
+            // Trim both ends and remove leading whitespace
+            setServerAlert(srv ? srv.trimStart() : null);
+            // Check sheet alert; if not loaded, call fetchSheetData to ensure it's populated
+            let sheetMsg = getSheetGlobalAlert();
+            if (sheetMsg) sheetMsg = sheetMsg.trimStart();
+            if (!sheetMsg) {
+                try {
+                    await fetchSheetData();
+                    sheetMsg = getSheetGlobalAlert();
+                } catch (e) {
+                    console.warn('Failed to fetch sheet for alerts', e);
+                }
+            }
+            setSheetAlert(sheetMsg || null);
         };
-        fetchAlert();
-        
-        // Poll for updates
-        const interval = setInterval(fetchAlert, 10000);
+        fetchAlerts();
+        const interval = setInterval(fetchAlerts, 10000);
         return () => clearInterval(interval);
     }, []);
 
-    if (!alertMsg) return null;
+    // Recompute scrolling when messages change or window is resized
+    React.useEffect(() => {
+        const calc = (container: HTMLDivElement | null, text: HTMLElement | null, setScrolling: (v: boolean) => void, setDuration: (n: number) => void, gap: number) => {
+            if (!container || !text) return;
+            // Ensure paddingRight applied before measuring scrollWidth so scrollWidth includes the gap.
+            text.style.paddingRight = `${gap}px`;
+            const containerWidth = container.clientWidth;
+            const textWidth = text.scrollWidth;
+            if (textWidth > containerWidth) {
+                setScrolling(true);
+                // Duration proportional to length; speed ~ 60px/s + base
+                const speed = 60; // px per second
+                const duration = Math.max(6, (containerWidth + textWidth + gap) / speed);
+                setDuration(duration);
+                // ensure the text has padding on the right to create spacing between loops
+                // padding already assigned above
+            } else {
+                setScrolling(false);
+                text.style.paddingRight = '0px';
+            }
+        };
+
+        const handle = () => {
+            calc(serverTextContainerRef.current, serverTextRef.current, setServerScrolling, setServerDuration, serverGap);
+            calc(sheetTextContainerRef.current, sheetTextRef.current, setSheetScrolling, setSheetDuration, sheetGap);
+        };
+
+        // Run immediately after DOM update to calculate scrolling
+        handle();
+        window.addEventListener('resize', handle);
+        return () => window.removeEventListener('resize', handle);
+    }, [serverAlert, sheetAlert]);
+
+    // Show to people who either are logged-in non-residents, or selected a pre-login non-resident role.
+    // If we have a logged-in user, show only when not a resident; if no logged-in user, show only when pre-login role exists and is non-resident.
+    const preLoginRole = currentRole; // currentRole returns preLogin role for unauthenticated users
+    const preLoginIsResident = preLoginRole === UserRole.RESIDENT;
+    // Use effectiveRole from AuthContext
+    // If effectiveRole is resident, hide banner. Otherwise show
+    if (!effectiveRole || effectiveRole === UserRole.RESIDENT) return null;
+    if (!serverAlert && !sheetAlert) return null;
 
     return (
-        <div className="bg-red-600 text-white text-sm font-bold p-2 text-center flex items-center justify-center animate-in slide-in-from-top">
-            <Bell size={16} className="mr-2 animate-pulse" />
-            <span>{alertMsg}</span>
-        </div>
+        <>
+            {serverAlert && (
+                <div ref={serverContainerRef} role="status" aria-live="assertive" className="bg-red-600 text-white text-sm font-bold p-2 text-center flex items-center h-10 animate-in slide-in-from-top">
+                    <Bell size={16} className="mr-2 animate-pulse flex-shrink-0" style={{ color: '#fff' }} />
+                    <div ref={serverTextContainerRef} className="flex-1 overflow-hidden whitespace-nowrap">
+                        <span
+                            ref={serverTextRef}
+                            className={`inline-block text-white`}
+                            style={serverScrolling ? { display: 'inline-block', transform: 'translateX(0)', animation: `marquee ${serverDuration}s linear infinite` } : {}}
+                        >
+                            {serverAlert}
+                        </span>
+                    </div>
+                </div>
+            )}
+            {sheetAlert && (
+                <div ref={sheetContainerRef} role="status" aria-live="polite" className="bg-yellow-400 text-gray-900 text-sm font-bold p-2 text-center flex items-center h-10 animate-in slide-in-from-top">
+                    <Bell size={16} className="mr-2 flex-shrink-0 text-[#5A3A00]" style={{ color: '#5A3A00' }} />
+                    <div ref={sheetTextContainerRef} className="flex-1 overflow-hidden whitespace-nowrap">
+                        <span
+                            ref={sheetTextRef}
+                            className={`inline-block text-[#5A3A00]`}
+                            style={sheetScrolling ? { display: 'inline-block', transform: 'translateX(0)', animation: `marquee ${sheetDuration}s linear infinite` } : {}}
+                        >
+                            {sheetAlert}
+                        </span>
+                    </div>
+                </div>
+            )}
+        </>
     );
 }
 
 export const MainLayout = () => {
-    const { user } = useAuth();
+    const { user, currentRole, isLoggedIn, effectiveRole } = useAuth();
     const { t } = useLanguage();
     
     const bottomNavLinks = useMemo(() => {
         let links = [];
+        // Use `effectiveRole` from AuthContext
 
-        if (!user) {
+        if (!isLoggedIn && !effectiveRole) {
             links = [
                 { path: '/', label: t('nav.resident'), icon: <Map size={24} /> },
                 { path: '/links', label: t('nav.links'), icon: <Link size={24} /> },
@@ -105,7 +205,7 @@ export const MainLayout = () => {
             return links;
         }
 
-        switch (user.role) {
+        switch (effectiveRole) {
             case UserRole.ADMIN:
                 links.push({ path: '/admin/users', label: 'Users', icon: <Users size={24} /> });
                 links.push({ path: '/manager/stations', label: t('nav.my_stations'), icon: <Home size={24} /> });
@@ -133,12 +233,13 @@ export const MainLayout = () => {
         links.push({ path: '/me', label: t('nav.me'), icon: <User size={24} /> });
 
         return links;
-    }, [user, t]);
+    }, [user, t, effectiveRole]);
 
     return (
         <div className="min-h-screen bg-gray-50 font-sans flex flex-col">
              <TopBar />
              <GlobalAlertBanner />
+            <style>{`@keyframes marquee { 0% { transform: translateX(0); } 80% { transform: translateX(-100%); } 100% { transform: translateX(-100%); } }`}</style>
              <div className="flex-1 max-w-lg mx-auto w-full bg-gray-50 min-h-screen shadow-2xl relative pb-16">
                  <Outlet />
              </div>

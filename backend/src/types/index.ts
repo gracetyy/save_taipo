@@ -62,6 +62,8 @@ export interface UserProfile {
     name: string;
     email: string;
     role: UserRole;
+    // Optional runtime hint for clients to indicate whether the user has an active authenticated session
+    isLoggedIn?: boolean;
     status: UserStatus;
     createdAt: number; // Timestamp
     lastLogin: number; // Timestamp

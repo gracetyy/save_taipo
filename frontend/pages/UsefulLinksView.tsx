@@ -6,9 +6,12 @@ export const UsefulLinksView = () => {
     const { t } = useLanguage();
 
     const tgGroups = [
-        { name: '即時大埔火災緊貼時事資訊及救援', url: 'https://t.me/Taipohelper', icon: Flame, color: 'text-orange-500', bg: 'bg-orange-50' },
+        { name: '即時大埔火災緊貼時事資訊及救援', url: 'https://t.me/Taipohelper1', icon: Flame, color: 'text-orange-500', bg: 'bg-orange-50' },
         { name: '大埔物資救援組', url: 'https://t.me/+7PObuQ5xWiI2ZGFl', icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-50' },
         { name: '大埔宏福苑火災資料連結整合', url: 'https://t.me/taipolink', icon: ShieldAlert, color: 'text-red-500', bg: 'bg-red-50' },
+        { name: '銀河系哨俠頻道', url: 'https://t.me/universalsentinelsinblack', icon: MessageCircle, color: 'text-yellow-500', bg: 'bg-yellow-50' },
+        { name: '儘量即時🙏🏻(大埔資料整合)物資人手需要', url: 'https://t.me/taipohelperr', icon: MessageCircle, color: 'text-yellow-500', bg: 'bg-yellow-50' },
+        { name: '物資供應狀態資料來源', url: 'https://docs.google.com/spreadsheets/d/1W8A40TCVAY5prHNyVk-TqdSv2EumkVvN9l7LoUrY8-w/export?format=csv&gid=0', icon: Info, color: 'text-yellow-500', bg: 'bg-yellow-50' },
         { name: '外區要車可去呢度', url: 'https://t.me/+eZU1LSsOI9w0YjE9', icon: Truck, color: 'text-blue-500', bg: 'bg-blue-50' },
         { name: '大埔救援 註冊社工', url: 'https://t.me/+vuGgtnjG1RFlMWQ1', icon: Users, color: 'text-purple-500', bg: 'bg-purple-50' },
         { name: '大埔救援 保暖物資', url: 'https://t.me/+rD2pJFnFnBswNjhl', icon: Heart, color: 'text-pink-500', bg: 'bg-pink-50' },
@@ -40,6 +43,7 @@ export const UsefulLinksView = () => {
         { name: '宏福苑消息', url: 'https://blaze-info.vercel.app/'},
         { name: '宏福苑火警尋親庇護中心即時名單', url: 'https://tai-po-wangfuk-fire-family-search.vercel.app/'},
         { name: '緊急寵物救援平台', url: 'https://taipofire-petrescue.vercel.app/#/'},
+        { name: '大埔宏福苑火警支援整合平台', url: 'https://supporttaipohk.com/'},
         ];
 
     const volunteer_websites = [
@@ -54,12 +58,14 @@ export const UsefulLinksView = () => {
         { name: '大埔宏福苑緊急資源簿', url: 'https://v0-emergency-resource-app-neon.vercel.app/'},
         { name: '宏福苑消息', url: 'https://blaze-info.vercel.app/'},
         { name: '香港火災救援信息聚合平台', url: 'https://telegram-rescue-3bhcgua4.manus.space/'},
-        { name: '大埔宏福苑協尋與救助平台', url: 'https://taipo1126.com/volunteer/tasks?brid=LsIpilOE9-hSWQw_heN91Q'},
+        { name: '大埔宏福苑協尋與救助平台', url: 'https://taipo1126.com/volunteer/tasks'},
         { name: '宏福苑消息', url: 'https://blaze-info.vercel.app/'},
         { name: '宏福苑火警尋親庇護中心即時名單', url: 'https://tai-po-wangfuk-fire-family-search.vercel.app/'},
         { name: '緊急寵物救援平台', url: 'https://taipofire-petrescue.vercel.app/#/'},
         { name: '災害訊息查證', url: 'https://tai-po-msg-frontend-fcw9.vercel.app/'},
         { name: '直播監控 (HOY/TVB/ANN/HK01)', url: 'https://cslfelix.github.io/hknews/'},
+        { name: 'Tai Po Helper', url: 'https://taipohelper.com/dl/d0a5f4'},
+        { name: '大埔宏福苑火警支援整合平台', url: 'https://supporttaipohk.com/'},
     ];
 
     return (

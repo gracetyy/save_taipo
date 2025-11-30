@@ -62,6 +62,9 @@ export interface UserProfile {
     name: string;
     email: string;
     role: UserRole;
+    // Whether this user is currently authenticated on the client
+    // This is primarily a frontend/runtime flag; the backend may omit this.
+    isLoggedIn?: boolean;
     status: UserStatus;
     createdAt: number; // Timestamp
     lastLogin: number; // Timestamp
