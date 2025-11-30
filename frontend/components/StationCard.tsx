@@ -4,7 +4,7 @@ import { Station, UserRole, SupplyStatus, CrowdStatus, OFFERING_CATEGORIES } fro
 import { toggleFavorite, isFavorite, voteStation } from '../services/dataService';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { MapPin, Navigation, ThumbsUp, ThumbsDown, Edit2, Heart, Users, ShieldCheck, Share2, Phone, ExternalLink } from 'lucide-react';
+import { MapPin, Navigation, ThumbsUp, ThumbsDown, Edit2, Heart, Users, ShieldCheck, Share2, Phone, ExternalLink, CheckCircle, AlertTriangle, Zap, HelpCircle, Pause } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 import { EditStationModal } from './EditStationModal';
 
@@ -17,7 +17,7 @@ interface StationCardProps {
 
 export const StationCard: React.FC<StationCardProps> = ({ station, userLocation, onUpdate, mode = 'RESIDENT' }) => {
     const navigate = useNavigate();
-    const { user } = useAuth();
+    const { user, effectiveRole } = useAuth();
     const { t, language } = useLanguage();
     const getTypeLabel = (typeKey: any) => {
         try {
@@ -125,6 +125,42 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
     };
 
     const normalizedOfferings = normalizeOfferings(station.offerings || []);
+    const normalizedNeeds = (station.needs || []) as any[];
+    const showOfferings = effectiveRole === UserRole.RESIDENT;
+    const showNeeds = !showOfferings; // converse
+
+    const mapEffectiveStatusForRole = (status: SupplyStatus) => {
+        if (effectiveRole === UserRole.RESIDENT && (status === SupplyStatus.GOV_CONTROL || status === SupplyStatus.PAUSED)) return SupplyStatus.NO_DATA;
+        return status;
+    }
+
+    const isStationNoData = effectiveRole === UserRole.RESIDENT && mapEffectiveStatusForRole(station.status) === SupplyStatus.NO_DATA;
+
+    const getItemStatusIcon = (status: SupplyStatus) => {
+        const s = mapEffectiveStatusForRole(status);
+        switch (s) {
+            case SupplyStatus.AVAILABLE: return <CheckCircle size={12} className="text-green-600" />;
+            case SupplyStatus.LOW_STOCK: return <AlertTriangle size={12} className="text-yellow-600" />;
+            case SupplyStatus.URGENT: return <Zap size={12} className="text-red-600" />;
+            case SupplyStatus.NO_DATA: return <HelpCircle size={12} className="text-gray-500" />;
+            case SupplyStatus.GOV_CONTROL: return <ShieldCheck size={12} className="text-blue-600" />;
+            case SupplyStatus.PAUSED: return <Pause size={12} className="text-purple-600" />;
+            default: return <HelpCircle size={12} className="text-gray-500" />;
+        }
+    }
+
+    const getItemStatusColorClass = (status: SupplyStatus) => {
+        const s = mapEffectiveStatusForRole(status);
+        switch (s) {
+            case SupplyStatus.AVAILABLE: return 'bg-green-50 text-green-800 border-green-100';
+            case SupplyStatus.LOW_STOCK: return 'bg-yellow-50 text-yellow-800 border-yellow-100';
+            case SupplyStatus.URGENT: return 'bg-red-50 text-red-800 border-red-100';
+            case SupplyStatus.NO_DATA: return 'bg-gray-50 text-gray-800 border-gray-100';
+            case SupplyStatus.GOV_CONTROL: return 'bg-blue-50 text-blue-800 border-blue-100';
+            case SupplyStatus.PAUSED: return 'bg-purple-50 text-purple-800 border-purple-100';
+            default: return 'bg-gray-50 text-gray-800 border-gray-100';
+        }
+    }
 
     return (
         <>
@@ -139,6 +175,11 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
                         <div className="flex gap-2 items-center flex-wrap">
                             <span className={`px-2 py-0.5 rounded-md text-xs font-semibold border ${getTypeColorClass(station.type)}`}>{getTypeLabel(station.type)}</span>
                             <span className={`px-2 py-0.5 rounded-md text-xs font-semibold border ${getOrganizerColorClass(station.organizer)}`}>{t(`organizer.${station.organizer.toLowerCase()}` as any)}</span>
+                            {/* Move status badge into header row so it aligns with type and organizer */}
+                            <span className={`px-2 py-0.5 rounded-md text-xs font-semibold border whitespace-nowrap flex items-center ${getItemStatusColorClass(station.status)}`}>
+                                <span className="inline-block mr-1 align-middle">{getItemStatusIcon(station.status)}</span>
+                                <span className="align-middle">{t(getStatusTranslationKey(mapEffectiveStatusForRole(station.status)))}</span>
+                            </span>
                         </div>
                     </div>
                         <div className="flex items-center text-gray-500 text-sm mt-0.5">
@@ -160,17 +201,6 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
             </div>
 
               <div className="flex flex-wrap gap-2 mb-3 items-center">
-                  {/* Status Badge */}
-                  <span className={`px-3 py-1 rounded-md text-xs font-bold border ${
-                        station.status === SupplyStatus.AVAILABLE ? 'bg-green-100 text-green-800 border-green-200' : 
-                        station.status === SupplyStatus.LOW_STOCK ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 
-                        station.status === SupplyStatus.URGENT ? 'bg-red-100 text-red-800 border-red-200' :
-                        station.status === SupplyStatus.NO_DATA ? 'bg-gray-100 text-gray-800 border-gray-200' :
-                        station.status === SupplyStatus.GOV_CONTROL ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                        'bg-purple-100 text-purple-800 border-purple-200'
-                  }`}>
-                      {t(getStatusTranslationKey(station.status))}
-                  </span>
                   {station.crowdStatus && (
                        <span className={`px-2 py-0.5 rounded text-xs font-bold border flex items-center ${
                             station.crowdStatus === CrowdStatus.LOW ? 'bg-green-50 text-green-700 border-green-100' :
@@ -182,25 +212,36 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
                   )}
             </div>
             
-            {/* Offerings */}
-            {normalizedOfferings && normalizedOfferings.length > 0 && (
+            {/* Offerings/Needs chips - show offerings for residents, needs for others */}
+            {isStationNoData ? (
+                <div className="mb-3">
+                    <div className="flex flex-wrap gap-1">
+                        <span className={`px-2 py-0.5 rounded text-xs font-medium border whitespace-nowrap ${getItemStatusColorClass(SupplyStatus.NO_DATA)}`}>
+                            <span className="inline-block mr-1 align-middle">{getItemStatusIcon(SupplyStatus.NO_DATA)}</span>
+                            <span className="align-middle">{t('status.no_data')}</span>
+                        </span>
+                    </div>
+                </div>
+            ) : showOfferings && normalizedOfferings && normalizedOfferings.length > 0 && (
                 <div className="mb-3">
                     <div className="flex flex-wrap gap-1">
                         {normalizedOfferings.filter(o => o && o.item && o.status).map((offering, idx) => (
-                            mode === 'RESIDENT' ? (
-                                <span key={idx} className="px-2 py-0.5 rounded text-xs font-medium bg-gray-50 text-gray-800 border border-gray-100">
-                                    {offering.item}
-                                </span>
-                            ) : (
-                                <span key={idx} className={`px-2 py-0.5 rounded text-xs font-medium border ${
-                                    offering.status === SupplyStatus.AVAILABLE ? 'bg-green-50 text-green-800 border-green-100' : 
-                                    offering.status === SupplyStatus.LOW_STOCK ? 'bg-yellow-50 text-yellow-800 border-yellow-100' : 
-                                    offering.status === SupplyStatus.URGENT ? 'bg-red-50 text-red-800 border-red-100' :
-                                    'bg-gray-50 text-gray-800 border-gray-100'
-                                }`}>
-                                    {offering.item} {offering.status === SupplyStatus.AVAILABLE ? '✅' : offering.status === SupplyStatus.LOW_STOCK ? '⚠️' : offering.status === SupplyStatus.URGENT ? '‼️' : ''}
-                                </span>
-                            )
+                            <span key={idx} className={`px-2 py-0.5 rounded text-xs font-medium border ${getItemStatusColorClass(offering.status)}`}>
+                                <span className="inline-block mr-1 align-middle">{getItemStatusIcon(offering.status)}</span>
+                                <span className="align-middle">{t(offering.item as any) || offering.item}</span>
+                            </span>
+                        ))}
+                    </div>
+                </div>
+            )}
+            {showNeeds && !isStationNoData && normalizedNeeds && normalizedNeeds.length > 0 && (
+                <div className="mb-3">
+                    <div className="flex flex-wrap gap-1">
+                        {normalizedNeeds.filter(o => o && o.item && o.status).map((need, idx) => (
+                            <span key={idx} className={`px-2 py-0.5 rounded text-xs font-medium border ${getItemStatusColorClass(need.status as SupplyStatus)}`}>
+                                <span className="inline-block mr-1 align-middle">{getItemStatusIcon(need.status as SupplyStatus)}</span>
+                                <span className="align-middle">{t(need.item as any) || need.item}</span>
+                            </span>
                         ))}
                     </div>
                 </div>
@@ -226,7 +267,8 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
                     <div className="flex gap-2">
                      <button 
                         onClick={handleFavorite}
-                        className={`p-1.5 rounded-full hover:bg-gray-100 transition ${isFav ? 'text-red-500' : 'text-gray-400'}`}
+                        className={`w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 transition ${isFav ? 'text-red-500' : 'text-gray-400'}`}
+                        aria-label={t('btn.favorite')}
                      >
                          <Heart size={16} className={isFav ? "fill-current" : ""}/>
                      </button>
@@ -236,7 +278,7 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
                                     target="_blank"
                                     rel="noreferrer"
                                     onClick={(e) => e.stopPropagation()}
-                                    className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-green-500 transition"
+                                    className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-green-500 transition"
                                     aria-label={t('btn.call')}
                                 >
                                     <Phone size={16}/>
@@ -248,7 +290,7 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
                                     target="_blank"
                                     rel="noreferrer"
                                     onClick={(e) => e.stopPropagation()}
-                                    className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition"
+                                    className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-gray-100 text-gray-400 hover:text-blue-600 transition"
                                     aria-label={t('btn.contact')}
                                     title={t('btn.contact')}
                                 >
@@ -257,15 +299,15 @@ export const StationCard: React.FC<StationCardProps> = ({ station, userLocation,
                             )}
                             <a
                                 href={station.mapLink || `https://www.google.com/maps/dir/?api=1&destination=${station.lat},${station.lng}`}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(e) => e.stopPropagation()}
-                        className="p-1.5 rounded-full hover:bg-gray-100 text-gray-400 hover:text-blue-500 transition"
-                        aria-label={t('btn.directions')}
-                        title={t('btn.directions')}
-                     >
-                         <Navigation size={16}/>
-                     </a>
+                                target="_blank"
+                                rel="noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="w-10 h-10 flex items-center justify-center rounded-md bg-primary text-white hover:bg-teal-700 transition shadow-md"
+                                aria-label={t('btn.directions')}
+                                title={t('btn.directions')}
+                            >
+                                 <Navigation size={16}/>
+                             </a>
                      {canEdit && (
                          <button 
                             onClick={handleEdit}

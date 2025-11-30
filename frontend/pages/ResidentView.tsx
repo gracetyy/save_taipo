@@ -1,6 +1,7 @@
 
 import React from 'react';
 import { StationExplorer } from '../components/StationExplorer';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 interface Props {
   userLocation: { lat: number; lng: number } | null;
@@ -9,7 +10,9 @@ interface Props {
 export const ResidentView: React.FC<Props> = ({ userLocation }) => {
     return (
         <div className="pb-24">
-            <StationExplorer userLocation={userLocation} mode="RESIDENT" />
+            <ErrorBoundary>
+                <StationExplorer userLocation={userLocation} mode="RESIDENT" />
+            </ErrorBoundary>
         </div>
     );
 };

@@ -8,7 +8,7 @@ import { getStation, verifyStation, getUserVote, isFavorite, toggleFavorite, del
 import { Station, UserRole, SupplyStatus, CrowdStatus, OFFERING_CATEGORIES } from '../types';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
-import { MapPin, ArrowLeft, Heart, ThumbsUp, ThumbsDown, ShieldCheck, Clock, Users, Navigation, Share2, Plus, Edit2, CheckCircle, AlertTriangle, Phone, ExternalLink } from 'lucide-react';
+import { MapPin, ArrowLeft, Heart, ThumbsUp, ThumbsDown, ShieldCheck, Clock, Users, Navigation, Share2, Plus, Edit2, CheckCircle, AlertTriangle, Phone, ExternalLink, Zap, HelpCircle, Pause } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 import { CategorySelector } from '../components/CategorySelector';
 import { EditStationModal } from '../components/EditStationModal';
@@ -20,7 +20,7 @@ interface Props {
 export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { user } = useAuth();
+    const { user, effectiveRole } = useAuth();
     const { t, language } = useLanguage();
   const { showToast } = useToast();
 
@@ -157,16 +157,77 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
 
   const isOwner = user && (station.ownerId === user.id || station.managers?.includes(user.email));
   const canEdit = user && (user.role === UserRole.ADMIN || isOwner);
+    const isResident = effectiveRole === UserRole.RESIDENT;
+    const showOfferings = isResident;
+    const showNeeds = !showOfferings; // ensure either needs or offerings (but never both)
 
     const manpowerItems = OFFERING_CATEGORIES['cat.manpower'] || [];
     const normalizeOfferings = (offerings: any[]) => {
         if (!offerings) return [] as any[];
         return offerings.map(o => typeof o === 'string' ? { item: o, status: SupplyStatus.AVAILABLE } : o);
     };
-    const normalizedOfferings = normalizeOfferings(station.offerings as any[]);
-    const filteredOfferings = user?.role === 'RESIDENT' ? normalizedOfferings?.filter(offering => !manpowerItems.includes(offering.item)) : normalizedOfferings;
 
-  return (
+    const mapEffectiveStatusForRole = (status: SupplyStatus) => {
+        if (isResident && (status === SupplyStatus.GOV_CONTROL || status === SupplyStatus.PAUSED)) return SupplyStatus.NO_DATA;
+        return status;
+    }
+
+    const getRoleStatusLabel = (status: SupplyStatus) => {
+          const roleKey = isResident ? 'resident' : 'volunteer';
+          const mapped = mapEffectiveStatusForRole(status);
+          const key = `status.${mapped === SupplyStatus.LOW_STOCK ? 'low_stock' : mapped === SupplyStatus.URGENT ? 'urgent' : mapped === SupplyStatus.AVAILABLE ? 'available' : mapped === SupplyStatus.NO_DATA ? 'no_data' : mapped === SupplyStatus.GOV_CONTROL ? 'gov_control' : 'paused'}.${roleKey}`;
+          return t(key as any) || t(getStatusTranslationKey(mapped) as any);
+      };
+
+      const getRoleStatusIcon = (status: SupplyStatus) => {
+          const mapped = mapEffectiveStatusForRole(status);
+           switch (mapped) {
+              case SupplyStatus.AVAILABLE: return <CheckCircle size={14} className="text-green-700" />;
+              case SupplyStatus.LOW_STOCK: return <AlertTriangle size={14} className="text-yellow-700" />;
+              case SupplyStatus.URGENT: return <Zap size={14} className="text-red-700" />;
+              case SupplyStatus.NO_DATA: return <HelpCircle size={14} className="text-gray-600" />;
+              case SupplyStatus.GOV_CONTROL: return <ShieldCheck size={14} className="text-blue-700" />;
+              case SupplyStatus.PAUSED: return <Pause size={14} className="text-gray-600" />;
+              default: return <HelpCircle size={14} className="text-gray-600" />;
+          }
+      };
+
+      const getStatusColorClass = (status: SupplyStatus) => {
+          const mapped = mapEffectiveStatusForRole(status);
+           switch (mapped) {
+              case SupplyStatus.AVAILABLE: return 'bg-green-50 text-green-800 border-green-100';
+              case SupplyStatus.LOW_STOCK: return 'bg-yellow-50 text-yellow-800 border-yellow-100';
+              case SupplyStatus.URGENT: return 'bg-red-50 text-red-800 border-red-100';
+              case SupplyStatus.NO_DATA: return 'bg-gray-50 text-gray-800 border-gray-100';
+              case SupplyStatus.GOV_CONTROL: return 'bg-blue-50 text-blue-800 border-blue-100';
+              case SupplyStatus.PAUSED: return 'bg-purple-50 text-purple-800 border-purple-100';
+              default: return 'bg-gray-50 text-gray-800 border-gray-100';
+          }
+      };
+
+      const groupItemsByStatus = (items: { item: string; status: SupplyStatus }[] | undefined) => {
+              const groups: Record<string, string[]> = {};
+              if (!items) return groups;
+              items.forEach(i => {
+                  const key = String(i.status);
+                  if (!groups[key]) groups[key] = [];
+                  groups[key].push(i.item);
+              });
+              return groups;
+          }
+
+          
+    const normalizedOfferings = normalizeOfferings(station.offerings as any[]);
+    let filteredOfferings = effectiveRole === UserRole.RESIDENT ? normalizedOfferings?.filter(offering => !manpowerItems.includes(offering.item)) : normalizedOfferings;
+    filteredOfferings = (filteredOfferings || []).map(o => ({ ...o, status: mapEffectiveStatusForRole(o.status) }));
+
+    const mappedNeeds = (station?.needs || []).map((n: any) => ({ ...n, status: mapEffectiveStatusForRole(n.status) }));
+    const needsGroups = groupItemsByStatus(mappedNeeds as any[]);
+    const offeringGroups = groupItemsByStatus(filteredOfferings as any[]);
+
+    const isStationNoData = isResident && mapEffectiveStatusForRole(station.status) === SupplyStatus.NO_DATA;
+
+    return (
     <div className="bg-white min-h-screen pb-20 relative">
       {/* Header Image / Map Placeholder */}
       <div className="h-64 bg-gray-100 relative">
@@ -205,9 +266,12 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
                       <div className="flex items-start justify-between gap-2">
                           <h1 className="text-2xl font-bold text-gray-900 mb-2 flex-1">{(language === 'en' && station.name_en && station.name_en.trim().length > 0) ? station.name_en : station.name}</h1>
                           <div className="flex flex-wrap gap-2 items-center">
-                              <span className={`px-3 py-1 rounded-md text-xs font-semibold border bg-gray-50 text-gray-700`}>{getTypeLabel(station.type)}</span>
-                              <span className={`px-3 py-1 rounded-md text-xs font-semibold border ${station.status === SupplyStatus.AVAILABLE ? 'bg-green-100 text-green-800 border-green-200' : station.status === SupplyStatus.LOW_STOCK ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : station.status === SupplyStatus.URGENT ? 'bg-red-100 text-red-800 border-red-200' : station.status === SupplyStatus.NO_DATA ? 'bg-gray-100 text-gray-800 border-gray-200' : station.status === SupplyStatus.GOV_CONTROL ? 'bg-blue-100 text-blue-800 border-blue-200' : 'bg-purple-100 text-purple-800 border-purple-200' }`}>{t(getStatusTranslationKey(station.status))}</span>
-                              <span className="px-3 py-1 rounded-md text-xs font-semibold border bg-gray-50 text-gray-700">{t(`organizer.${station.organizer.toLowerCase()}` as any)}</span>
+                              <span className={`px-2 py-0.5 rounded-md text-xs font-semibold border bg-gray-50 text-gray-700`}>{getTypeLabel(station.type)}</span>
+                              <span className={`px-2 py-0.5 rounded-md text-xs font-semibold border ${getStatusColorClass(station.status)}`}>
+                                  <span className="mr-1 inline-block align-middle">{getRoleStatusIcon(station.status)}</span>
+                                  <span className="align-middle">{getRoleStatusLabel(station.status)}</span>
+                              </span>
+                              <span className="px-2 py-0.5 rounded-md text-xs font-semibold border bg-gray-50 text-gray-700">{t(`organizer.${station.organizer.toLowerCase()}` as any)}</span>
                           </div>
                       </div>
                   {station.verification?.isVerified && (
@@ -220,16 +284,6 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
               </p>
               
               <div className="flex flex-wrap gap-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold border ${
-                        station.status === SupplyStatus.AVAILABLE ? 'bg-green-100 text-green-800 border-green-200' : 
-                        station.status === SupplyStatus.LOW_STOCK ? 'bg-yellow-100 text-yellow-800 border-yellow-200' : 
-                        station.status === SupplyStatus.URGENT ? 'bg-red-100 text-red-800 border-red-200' :
-                        station.status === SupplyStatus.NO_DATA ? 'bg-gray-100 text-gray-800 border-gray-200' :
-                        station.status === SupplyStatus.GOV_CONTROL ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                        'bg-purple-100 text-purple-800 border-purple-200'
-                  }`}>
-                      {t(getStatusTranslationKey(station.status))}
-                  </span>
                   {station.crowdStatus && (
                        <span className={`px-3 py-1 rounded-full text-xs font-bold border flex items-center ${
                             station.crowdStatus === CrowdStatus.LOW ? 'bg-green-50 text-green-700 border-green-100' :
@@ -241,7 +295,10 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
                   )}
               </div>
           </div>
-
+          
+          
+          
+          
           {/* Action Buttons */}
                     <div className="grid grid-cols-2 gap-4 mb-8">
                               <div className="flex gap-2">
@@ -292,48 +349,80 @@ export const StationDetailView: React.FC<Props> = ({ userLocation }) => {
               </div>
           </div>
 
+          {/* Station-level No Data (Resident only) */}
+          {isStationNoData && (
+              <div className="mb-8">
+                  <div className={`flex items-start gap-3 p-3 rounded-xl border ${getStatusColorClass(SupplyStatus.NO_DATA)}`}>
+                      <div className="flex-shrink-0 mt-0.5">{getRoleStatusIcon(SupplyStatus.NO_DATA)}</div>
+                      <div className="text-sm text-gray-800"><span className="font-semibold">{getRoleStatusLabel(SupplyStatus.NO_DATA)}</span></div>
+                  </div>
+              </div>
+          )}
+
           {/* Needs */}
-          {station.needs && station.needs.length > 0 && (
+          {showNeeds && !isStationNoData && station.needs && station.needs.length > 0 && (
               <div className="mb-8">
                   <h3 className="font-bold text-gray-900 mb-3 flex items-center">
                       <AlertTriangle size={18} className="mr-2 text-red-500"/>
                       {t('station.needs_label')}
                   </h3>
                   <div className="grid grid-cols-1 gap-2">
-                      {station.needs.map((need, idx) => (
-                          <div key={idx} className="flex justify-between items-center p-3 bg-red-50 rounded-xl border border-red-100">
-                              <span className="font-medium text-gray-800">{need.item} - {t(getStatusTranslationKey(need.status))}</span>
-                          </div>
-                      ))}
+                      {(() => {
+                          const order = [SupplyStatus.URGENT, SupplyStatus.LOW_STOCK, SupplyStatus.AVAILABLE, SupplyStatus.NO_DATA, SupplyStatus.GOV_CONTROL, SupplyStatus.PAUSED];
+                          const elements: React.ReactNode[] = [];
+                          for (const status of order) {
+                              const list = needsGroups[String(status)];
+                              if (!list || list.length === 0) continue;
+                              const label = getRoleStatusLabel(status);
+                              const joined = (language === 'zh') ? list.map(i => t(i as any) || i).join('、') : list.map(i => t(i as any) || i).join(', ');
+                              elements.push(
+                                  <div key={String(status)} className={`flex items-start gap-3 p-3 rounded-xl border ${getStatusColorClass(status)}`}>
+                                      <div className="flex-shrink-0 mt-0.5">{getRoleStatusIcon(status)}</div>
+                                      <div className="text-sm text-gray-800"><span className="font-semibold">{label}：</span>{joined}</div>
+                                  </div>
+                              );
+                          }
+                          return elements;
+                      })()}
                   </div>
               </div>
           )}
 
           {/* Offerings */}
+          {showOfferings && (
           <div className="mb-8">
                <h3 className="font-bold text-gray-900 mb-3 flex items-center">
                   <CheckCircle size={18} className="mr-2 text-green-500"/>
                   {t('station.offerings_label')}
                </h3>
                {filteredOfferings && filteredOfferings.length > 0 ? (
-                   <div className="flex flex-wrap gap-2">
-                       {filteredOfferings.map((offering, idx) => (
-                           <span key={idx} className={`px-3 py-1.5 rounded-lg text-sm font-medium border ${
-                               offering.status === SupplyStatus.AVAILABLE ? 'bg-green-50 text-green-800 border-green-100' :
-                               offering.status === SupplyStatus.LOW_STOCK ? 'bg-yellow-50 text-yellow-800 border-yellow-100' :
-                               'bg-gray-50 text-gray-800 border-gray-100'
-                           }`}>
-                               {offering.item} {offering.status === SupplyStatus.AVAILABLE ? '✅' : offering.status === SupplyStatus.LOW_STOCK ? '⚠️' : offering.status === SupplyStatus.URGENT ? '‼️' : ''} - {t(getStatusTranslationKey(offering.status))}
-                           </span>
-                       ))}
+                   <div className="grid grid-cols-1 gap-2">
+                       {(() => {
+                           const order = [SupplyStatus.URGENT, SupplyStatus.LOW_STOCK, SupplyStatus.AVAILABLE, SupplyStatus.NO_DATA, SupplyStatus.GOV_CONTROL, SupplyStatus.PAUSED];
+                           const elements: React.ReactNode[] = [];
+                           for (const status of order) {
+                               const list = offeringGroups[String(status)];
+                               if (!list || list.length === 0) continue;
+                               const label = getRoleStatusLabel(status);
+                               const joined = (language === 'zh') ? list.map(i => t(i as any) || i).join('、') : list.map(i => t(i as any) || i).join(', ');
+                               elements.push(
+                                   <div key={String(status)} className={`flex items-start gap-3 p-3 rounded-xl border ${getStatusColorClass(status)}`}>
+                                       <div className="flex-shrink-0 mt-0.5">{getRoleStatusIcon(status)}</div>
+                                       <div className="text-sm text-gray-800"><span className="font-semibold">{label}：</span>{joined}</div>
+                                   </div>
+                               );
+                           }
+                           return elements;
+                       })()}
                    </div>
-               ) : (
+            ) : (
                    <p className="text-gray-400 text-sm italic">No specific offerings listed.</p>
                )}
-          </div>
+        </div>
+        )}
           
           {/* Remarks */}
-          {station.remarks && user?.role !== 'RESIDENT' && (
+          {station.remarks && effectiveRole !== UserRole.RESIDENT && (
               <div className="mb-8">
                   <h3 className="font-bold text-gray-900 mb-3">Remarks</h3>
                   <div className="text-gray-700 text-sm whitespace-pre-wrap">{station.remarks}</div>

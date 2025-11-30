@@ -6,7 +6,8 @@ import { Station, StationType, SupplyStatus, UserRole } from '../types';
 import { getStations, calculateDistance } from '../services/dataService';
 import { StationCard } from '../components/StationCard';
 import { CategoryFilter } from '../components/CategoryFilter';
-import { Filter, Map as MapIcon, List, Search, Crosshair, PackageOpen, RotateCcw, Car, ArrowUpDown } from 'lucide-react';
+import { Filter, Map as MapIcon, List, Search, Crosshair, PackageOpen, RotateCcw, Car, ArrowUpDown, Navigation, Phone, ExternalLink } from 'lucide-react';
+import { renderToStaticMarkup } from 'react-dom/server';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -20,7 +21,7 @@ interface StationExplorerProps {
 
 export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, mode = 'RESIDENT' }) => {
     const { t, language } = useLanguage();
-  const { user } = useAuth();
+    const { user, effectiveRole } = useAuth();
   const navigate = useNavigate();
   const [stations, setStations] = useState<Station[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -41,6 +42,12 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
   const markersRef = useRef<any[]>([]);
   const headerRef = useRef<HTMLDivElement>(null);
   const mapHeight = useResponsiveMapHeight({ headerRef });
+
+    // Map status mapping per role: Residents should see GOV_CONTROL/PAUSED as NO_DATA
+    const mapEffectiveStatusForRole = (status: SupplyStatus) => {
+            if (effectiveRole === UserRole.RESIDENT && (status === SupplyStatus.GOV_CONTROL || status === SupplyStatus.PAUSED)) return SupplyStatus.NO_DATA;
+            return status;
+    }
 
   // Update default sort if user has location
   useEffect(() => {
@@ -87,8 +94,8 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
     setSortBy(userLocation ? 'DISTANCE' : 'STATUS');
   };
 
-  const filteredStations = useMemo(() => {
-    return stations.filter(s => {
+        const filteredStations = useMemo(() => {
+        return stations.filter(s => {
       // Type Filter
       if (activeType !== 'ALL' && s.type !== activeType) return false;
       
@@ -108,8 +115,9 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
           return matchesName || matchesAddress || matchesOfferings;
       }
       
-      // Status Filter
-      if (selectedStatuses.length > 0 && !selectedStatuses.includes(s.status)) return false;
+    // Status Filter - apply effective mapping per role when checking
+    const mappedStationStatus = mapEffectiveStatusForRole(s.status);
+    if (selectedStatuses.length > 0 && !selectedStatuses.includes(mappedStationStatus)) return false;
 
       // Organizer Filter
       if (selectedOrganizers.length > 0 && !selectedOrganizers.includes(s.organizer)) return false;
@@ -126,7 +134,7 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
         if (b.status === SupplyStatus.AVAILABLE && a.status !== SupplyStatus.AVAILABLE) return 1;
         return 0;
     });
-    }, [stations, activeType, searchQuery, selectedItems, sortBy, userLocation, selectedStatuses, selectedOrganizers]);
+    }, [stations, activeType, searchQuery, selectedItems, sortBy, userLocation, selectedStatuses, selectedOrganizers, effectiveRole]);
 
   // Leaflet Map Initialization and Update
   useEffect(() => {
@@ -215,11 +223,11 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
 
           // Add Station Markers (Dot style - CircleMarker)
           filteredStations.forEach(s => {
-              let color = '#9AA0A6'; // Gray default
-              let statusText = t('status.unverified');
-              
-              if (s.status === SupplyStatus.AVAILABLE) { color = '#34A853'; statusText = t('status.available'); } 
-              else if (s.status === SupplyStatus.LOW_STOCK) { color = '#FBBC04'; statusText = t('status.low_stock'); }
+                  let color = '#9AA0A6'; // Gray default
+                  let statusText = t('status.unverified');
+              const mappedStatus = mapEffectiveStatusForRole(s.status);
+              if (mappedStatus === SupplyStatus.AVAILABLE) { color = '#34A853'; statusText = t(getStatusTranslationKey(mappedStatus as SupplyStatus)); } 
+              else if (mappedStatus === SupplyStatus.LOW_STOCK) { color = '#FBBC04'; statusText = t(getStatusTranslationKey(mappedStatus as SupplyStatus)); }
 
               // Use CircleMarker to ensure a pure vector circle (dot) without pin shape
               const marker = L.circleMarker([s.lat, s.lng], {
@@ -231,36 +239,66 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
                   opacity: 1
               }).addTo(map);
               
-              const displayName = (language === 'en' && s.name_en && s.name_en.trim().length > 0) ? s.name_en : s.name;
-              // Bind Tooltip (Label) - only visible when zoomed in
-              marker.bindTooltip(displayName, {
+                            const displayName = (language === 'en' && s.name_en && s.name_en.trim().length > 0) ? s.name_en : s.name;
+                            // Support functions for popup & tooltip badges
+                            // Helper functions to render status svg and colors
+                            const getStatusIconSvg = (status: SupplyStatus) => {
+                                switch (status) {
+                                    case SupplyStatus.AVAILABLE: return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>`;
+                                    case SupplyStatus.LOW_STOCK: return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>`;
+                                    case SupplyStatus.URGENT: return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-8z"/></svg>`;
+                                    case SupplyStatus.NO_DATA: return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v.01"/><path d="M12 12a1.5 1.5 0 10-1.5-1.5"/></svg>`;
+                                    case SupplyStatus.GOV_CONTROL: return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l8 4v6c0 5-3.58 9.74-8 11-4.42-1.26-8-6-8-11V6l8-4z"/><path d="M9 12l2 2 4-4"/></svg>`;
+                                    case SupplyStatus.PAUSED: return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>`;
+                                    default: return `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/></svg>`;
+                                }
+                            }
+
+                            const getStatusColorHex = (status: SupplyStatus) => {
+                                switch (status) {
+                                    case SupplyStatus.AVAILABLE: return { bg: '#ecfdf5', text: '#065f46', border: '#bbf7d0', color: '#34A853' };
+                                    case SupplyStatus.LOW_STOCK: return { bg: '#fffbeb', text: '#92400e', border: '#fde68a', color: '#FBBC04' };
+                                    case SupplyStatus.URGENT: return { bg: '#fff1f2', text: '#b91c1c', border: '#fecaca', color: '#EF4444' };
+                                    case SupplyStatus.NO_DATA: return { bg: '#f8fafc', text: '#374151', border: '#e5e7eb', color: '#6B7280' };
+                                    case SupplyStatus.GOV_CONTROL: return { bg: '#eff6ff', text: '#1d4ed8', border: '#bfdbfe', color: '#3B82F6' };
+                                    case SupplyStatus.PAUSED: return { bg: '#f3e8ff', text: '#6b21a8', border: '#f3e8ff', color: '#8B5CF6' };
+                                    default: return { bg: '#ffffff', text: '#111827', border: '#e5e7eb', color: '#6B7280' };
+                                }
+                            }
+
+                            // Bind Tooltip (Label) - only visible when zoomed in; include status badge for consistency
+                              marker.bindTooltip(displayName, {
                   permanent: true,
                   direction: 'bottom',
                   className: 'station-label-tooltip',
                   offset: [0, 8]
               });
 
-              // Enhanced popup content with JS Click Handler for Sandbox compatibility
-              const popupContent = `
+                            
+
+                              // Render lucide icons to SVG strings so popup uses same icons as StationDetailView
+                              const navSvg = renderToStaticMarkup(<Navigation size={18} />);
+                              const phoneSvg = renderToStaticMarkup(<Phone size={18} />);
+                              const extSvg = renderToStaticMarkup(<ExternalLink size={18} />);
+
+                              const popupContent = `
                 <div onclick="window.stationNavigate('${s.id}')" role="button" tabindex="0" style="cursor: pointer; text-decoration: none; color: inherit; display: block; font-family: sans-serif;">
                     <div style="background: ${color}; height: 4px; width: 100%; border-top-left-radius: 8px; border-top-right-radius: 8px;"></div>
                         <div style="padding: 12px;">
-                        <div style="display:inline-block; font-size: 10px; font-weight: bold; color: ${color}; border: 1px solid ${color}; padding: 1px 6px; border-radius: 12px; margin-bottom: 6px;">${statusText}</div>
-                        <div style="margin-top:6px; display:inline-block; margin-right:6px; font-size: 11px; background:${getTypeColorHex(s.type).bg}; padding:6px 10px; border-radius:8px; border:1px solid ${getTypeColorHex(s.type).border}; color:${getTypeColorHex(s.type).text};">${getTypeLabel(s.type)}</div>
-                        <div style="display:inline-block; font-size: 11px; background:${getOrganizerColorHex(s.organizer).bg}; padding:6px 10px; border-radius:8px; border:1px solid ${getOrganizerColorHex(s.organizer).border}; color:${getOrganizerColorHex(s.organizer).text};">${t(`organizer.${s.organizer.toLowerCase()}` as any)}</div>
+                                                <div style="margin-top:6px; display:flex; gap:8px; align-items:center; margin-bottom:6px;">
+                                                    <div style="display:inline-flex; align-items:center; padding:4px 8px; border-radius:8px; border:1px solid ${getStatusColorHex(mappedStatus).border}; color:${getStatusColorHex(mappedStatus).text}; background:${getStatusColorHex(mappedStatus).bg};">${getStatusIconSvg(mappedStatus)}<span style="margin-left:6px; font-size:11px; font-weight:600; color: ${getStatusColorHex(mappedStatus).text};">${getRoleStatusLabel(s.status)}</span></div>
+                                                        <div style="display:inline-flex; align-items:center; padding:4px 8px; border-radius:8px; border:1px solid ${getTypeColorHex(s.type).border}; color:${getTypeColorHex(s.type).text}; background:${getTypeColorHex(s.type).bg}; font-size:11px; font-weight:600;">${getTypeLabel(s.type)}</div>
+                                                        <div style="display:inline-flex; align-items:center; padding:4px 8px; border-radius:8px; border:1px solid ${getOrganizerColorHex(s.organizer).border}; color:${getOrganizerColorHex(s.organizer).text}; background:${getOrganizerColorHex(s.organizer).bg}; font-size:11px; font-weight:600;">${t(`organizer.${s.organizer.toLowerCase()}` as any)}</div>
+                                                </div>
                         <h3 style="margin: 0 0 4px 0; font-size: 15px; font-weight: 700; color: #202124;">${displayName}</h3>
                         <p style="margin: 0; font-size: 12px; color: #5F6368; line-height: 1.4;">${s.address}</p>
                         <div style="margin-top: 8px; font-size: 11px; color: #5F6368;">
                             <strong>${t('card.offerings')}:</strong> ${ (s.offerings && s.offerings.length) ? s.offerings.map(o => o.item).join(', ') : t('card.no_info') }
                         </div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-top: 10px; padding-top: 8px; border-top: 1px solid #eee;">
-                            <a href="${s.mapLink || ('https://www.google.com/maps/dir/?api=1&destination=' + s.lat + ',' + s.lng)}" target="_blank" rel="noreferrer" onclick="event.stopPropagation();" style="display:inline-flex; padding:8px 10px; background:#0f766e; color:#fff; font-weight:bold; border-radius:8px; text-decoration:none;" title="${t('btn.directions')}" aria-label="${t('btn.directions')}">
-                                <svg role="img" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:block;">
-                                    <title>${t('btn.directions')}</title>
-                                    <path d="M12 2L2 12l4 1 1 4 9-10 1-1-5-3z" />
-                                </svg>
-                            </a>
-                            ${s.contactLink ? `<a href="${s.contactLink}" target="_blank" rel="noreferrer" onclick="event.stopPropagation();" style="display:inline-flex; padding:8px 10px; background:#fff; color:#374151; font-weight:bold; border-radius:8px; text-decoration:none; border:1px solid #eee; margin-right:8px;" title="${t('btn.contact')}" aria-label="${t('btn.contact')}"><svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d=\"M10 2L14 6M6 10L10 14M10 14l4 4\"/></svg></a>` : ''}
+                            <a href="${s.mapLink || ('https://www.google.com/maps/dir/?api=1&destination=' + s.lat + ',' + s.lng)}" target="_blank" rel="noreferrer" onclick="event.stopPropagation();" style="display:inline-flex; padding:8px 10px; background:#0f766e; color:#fff; font-weight:bold; border-radius:8px; text-decoration:none;" title="${t('btn.directions')}" aria-label="${t('btn.directions')}">${navSvg}</a>
+                            ${s.contactNumber ? `<a href="tel:${s.contactNumber.replace(/\s+/g, '')}" target="_blank" rel="noreferrer" onclick="event.stopPropagation();" style="display:inline-flex; padding:8px 10px; background:#fff; color:#374151; font-weight:bold; border-radius:8px; text-decoration:none; border:1px solid #eee; margin-right:8px;" title="${t('btn.call')}" aria-label="${t('btn.call')}">${phoneSvg}</a>` : ''}
+                            ${s.contactLink ? `<a href="${s.contactLink}" target="_blank" rel="noreferrer" onclick="event.stopPropagation();" style="display:inline-flex; padding:8px 10px; background:#fff; color:#374151; font-weight:bold; border-radius:8px; text-decoration:none; border:1px solid #eee; margin-right:8px;" title="${t('btn.contact')}" aria-label="${t('btn.contact')}">${extSvg}</a>` : ''}
                             <div style="text-align:center; color: #0F766E; font-weight: bold; font-size: 11px;">${t('res.view_details')} &rarr;</div>
                         </div>
                     </div>
@@ -298,6 +336,14 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
             default: return 'bg-gray-50 text-gray-700 border-gray-100';
         }
     }
+    const getRoleStatusLabel = (status: SupplyStatus) => {
+        const mapped = mapEffectiveStatusForRole(status);
+        const roleKey = effectiveRole === UserRole.RESIDENT ? 'resident' : 'volunteer';
+        const key = `status.${mapped === SupplyStatus.LOW_STOCK ? 'low_stock' : mapped === SupplyStatus.URGENT ? 'urgent' : mapped === SupplyStatus.AVAILABLE ? 'available' : mapped === SupplyStatus.NO_DATA ? 'no_data' : mapped === SupplyStatus.GOV_CONTROL ? 'gov_control' : 'paused'}.${roleKey}`;
+        return t(key as any) || t(getStatusTranslationKey(mapped as SupplyStatus));
+    }
+    
+
     const getStatusColorClass = (status: SupplyStatus) => {
         switch (status) {
             case SupplyStatus.AVAILABLE: return 'bg-green-50 text-green-700 border-green-100';
@@ -448,8 +494,11 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
                  {/* Sorting */}
                       <button 
                           onClick={() => setSortBy(sortBy === 'STATUS' ? 'DISTANCE' : 'STATUS')}
-                          className="whitespace-nowrap text-xs font-bold text-gray-600 flex items-center bg-gray-100 px-2 py-1 rounded-md hover:bg-gray-200"
-                    disabled={!userLocation && sortBy === 'STATUS'}
+                          className={`whitespace-nowrap text-xs font-bold text-gray-600 flex items-center bg-gray-100 px-2 py-1 rounded-md transition ${(!userLocation && sortBy === 'STATUS') ? 'opacity-60 cursor-not-allowed' : 'hover:bg-gray-200'}`}
+                          disabled={!userLocation && sortBy === 'STATUS'}
+                          title={!userLocation && sortBy === 'STATUS' ? t('sort.distance_disabled') : (sortBy === 'STATUS' ? t('sort.status') : t('sort.distance'))}
+                          aria-disabled={!userLocation && sortBy === 'STATUS'}
+                          aria-pressed={sortBy === 'DISTANCE'}
                  >
                      <ArrowUpDown size={14} className="mr-1.5"/>
                      {sortBy === 'STATUS' ? t('sort.status') : t('sort.distance')}
@@ -471,13 +520,20 @@ export const StationExplorer: React.FC<StationExplorerProps> = ({ userLocation, 
              <div className="mt-2 bg-white p-2 rounded-lg border shadow-sm flex gap-2 flex-wrap animate-in slide-in-from-top-2">
                  <div className="flex items-center gap-2 mr-4">
                      <div className="text-xs font-medium mr-2">{t('sort.status')}</div>
-                     {Object.values(SupplyStatus).map((s) => (
-                         <button
-                            key={s}
-                            onClick={() => setSelectedStatuses(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])}
-                            className={`px-2 py-0.5 text-xs rounded border ${selectedStatuses.includes(s) ? getStatusColorClass(s as SupplyStatus) : 'bg-gray-100 text-gray-700'}`}
-                         >{t(getStatusTranslationKey(s as SupplyStatus))}</button>
-                     ))}
+                         {(() => {
+                             // Build an ordered list of effective statuses for the current role, de-duplicated
+                             const order = [SupplyStatus.AVAILABLE, SupplyStatus.LOW_STOCK, SupplyStatus.URGENT, SupplyStatus.NO_DATA, SupplyStatus.GOV_CONTROL, SupplyStatus.PAUSED];
+                             const mapped = order.map(s => mapEffectiveStatusForRole(s as SupplyStatus));
+                             const uniq: SupplyStatus[] = [];
+                             mapped.forEach(s => { if (!uniq.includes(s)) uniq.push(s); });
+                             return uniq.map(s => (
+                                 <button
+                                    key={s}
+                                    onClick={() => setSelectedStatuses(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])}
+                                    className={`px-2 py-0.5 text-xs rounded border ${selectedStatuses.includes(s) ? getStatusColorClass(s as SupplyStatus) : 'bg-gray-100 text-gray-700'}`}
+                                 >{getRoleStatusLabel(s as SupplyStatus)}</button>
+                             ));
+                         })()}
                  </div>
                  <div className="flex items-center gap-2">
                      <div className="text-xs font-medium mr-2">{t('filter.organizer')}</div>

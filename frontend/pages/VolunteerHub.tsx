@@ -6,6 +6,7 @@ import { getStations } from '../services/dataService';
 import { MapPin } from 'lucide-react';
 import { useToast } from '../contexts/ToastContext';
 import { StationExplorer } from '../components/StationExplorer';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 interface Props {
   userLocation: { lat: number; lng: number } | null;
@@ -48,7 +49,9 @@ export const VolunteerHub: React.FC<Props> = ({ userLocation }) => {
             </div>
         </div>
 
-        <StationExplorer userLocation={userLocation} mode="VOLUNTEER" />
+        <ErrorBoundary>
+          <StationExplorer userLocation={userLocation} mode="VOLUNTEER" />
+        </ErrorBoundary>
     </div>
   );
 };

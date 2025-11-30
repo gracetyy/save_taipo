@@ -566,7 +566,7 @@ export const MyStationsView: React.FC<Props> = ({ userLocation: _userLocation })
             >
               <div className="flex items-start justify-between mb-2">
                 <h3 className="font-bold text-gray-900 flex-1 pr-2">{station.name}</h3>
-                <span className={`px-2.5 py-1 rounded-full text-xs font-bold border ${getStatusColor(station.status)}`}>
+                <span className={`px-2 py-0.5 rounded-md text-xs font-semibold border ${getStatusColor(station.status)}`}>
                   {t(getStatusTranslationKey(station.status))}
                 </span>
               </div>
